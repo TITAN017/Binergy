@@ -1,7 +1,10 @@
 // ignore_for_file: prefer_const_constructors
 
+import 'dart:developer';
+
 import 'package:binergy/screens/auth/login.dart';
 import 'package:binergy/screens/auth/signin.dart';
+import 'package:binergy/screens/auth/utils/material_button.dart';
 import 'package:binergy/screens/auth/utils/rep_animation.dart';
 import 'package:binergy/shared/or_divider.dart';
 import 'package:flutter/material.dart';
@@ -36,6 +39,13 @@ class _WrapperState extends State<Wrapper> {
         appBar: AppBar(
           elevation: 10,
           centerTitle: true,
+          actions: [
+            IconButton(
+              onPressed: () {},
+              icon: Icon(Icons.info_outline),
+              color: Colors.greenAccent,
+            ),
+          ],
           title: Text(
             flag ? 'Log in' : 'Sign in',
             style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
@@ -69,6 +79,20 @@ class _WrapperState extends State<Wrapper> {
               ),
               SizedBox(height: 15),
               OrDivider(),
+              SizedBox(height: 15),
+              CustomMaterialButton(
+                onTap: () {},
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  child: Image.asset(
+                    './lib/assets/google.png',
+                    height: 40,
+                  ),
+                ),
+              ),
             ],
           ),
         ),
