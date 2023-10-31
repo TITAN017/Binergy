@@ -1,7 +1,5 @@
 // ignore_for_file: prefer_const_constructors
 
-import 'dart:developer';
-
 import 'package:binergy/screens/auth/login.dart';
 import 'package:binergy/screens/auth/signin.dart';
 import 'package:binergy/screens/auth/utils/material_button.dart';
@@ -93,6 +91,7 @@ class _WrapperState extends State<Wrapper> {
                   ),
                 ),
               ),
+              SizedBox(height: 15),
             ],
           ),
         ),
