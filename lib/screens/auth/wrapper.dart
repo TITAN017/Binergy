@@ -1,20 +1,24 @@
 // ignore_for_file: prefer_const_constructors
 
+import 'dart:developer';
+
+import 'package:binergy/controller/auth.dart';
 import 'package:binergy/screens/auth/login.dart';
 import 'package:binergy/screens/auth/signin.dart';
 import 'package:binergy/screens/auth/utils/material_button.dart';
 import 'package:binergy/screens/auth/utils/rep_animation.dart';
 import 'package:binergy/shared/or_divider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class Wrapper extends StatefulWidget {
+class Wrapper extends ConsumerStatefulWidget {
   const Wrapper({super.key});
 
   @override
-  State<Wrapper> createState() => _WrapperState();
+  ConsumerState<Wrapper> createState() => _WrapperState();
 }
 
-class _WrapperState extends State<Wrapper> {
+class _WrapperState extends ConsumerState<Wrapper> {
   bool flag = true;
 
   void toggle() {
@@ -39,7 +43,9 @@ class _WrapperState extends State<Wrapper> {
           centerTitle: true,
           actions: [
             IconButton(
-              onPressed: () {},
+              onPressed: () async {
+                await ref.read(googleProvider.notifier).logout(ref);
+              },
               icon: Icon(Icons.info_outline),
               color: Colors.greenAccent,
             ),
@@ -79,7 +85,10 @@ class _WrapperState extends State<Wrapper> {
               OrDivider(),
               SizedBox(height: 15),
               CustomMaterialButton(
-                onTap: () {},
+                onTap: () {
+                  log('DEBUG : Google Sign In');
+                  ref.read(googleProvider.notifier).signIn(ref);
+                },
                 child: Container(
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(15),
