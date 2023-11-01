@@ -1,4 +1,4 @@
-import 'package:binergy/screens/auth/wrapper.dart';
+import 'package:binergy/route.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,7 +11,7 @@ void main() async {
   );
   runApp(
     const ProviderScope(
-      child: const MyApp(),
+      child: MyApp(),
     ),
   );
 }
@@ -21,14 +21,14 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
       debugShowCheckedModeBanner: false,
       title: 'Binergy',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const Wrapper(),
+      routerConfig: router,
     );
   }
 }

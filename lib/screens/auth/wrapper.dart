@@ -8,6 +8,7 @@ import 'package:binergy/screens/auth/signin.dart';
 import 'package:binergy/screens/auth/utils/material_button.dart';
 import 'package:binergy/screens/auth/utils/rep_animation.dart';
 import 'package:binergy/shared/or_divider.dart';
+import 'package:binergy/shared/snackbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -23,13 +24,8 @@ class _WrapperState extends ConsumerState<Wrapper> {
 
   void toggle() {
     flag = !flag;
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(flag ? 'Switched to Log in!' : 'Switched to Sign in!'),
-        duration: Duration(milliseconds: 500),
-      ),
-    );
+    showSnackBar(
+        context, flag ? 'Switched to Log in!' : 'Switched to Sign in!');
     setState(() {});
   }
 

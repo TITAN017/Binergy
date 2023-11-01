@@ -1,4 +1,6 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
+import 'dart:developer';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -46,12 +48,16 @@ class AuthState extends StateNotifier<AuthModel> {
   AuthState() : super(AuthModel(loading: false));
 
   Future signIn(WidgetRef ref) async {
+    log('DEBUG : Google Sign In');
     state = state.copyWith(loading: true);
 
     GoogleSignInAccount user;
 
     final googleUser = await googleSignIn.signIn();
-    if (googleUser == null) return;
+    if (googleUser == null) {
+      log('DEBUG: No user selected');
+      return;
+    }
     user = googleUser;
 
     final googleAuth = await user.authentication;
@@ -64,14 +70,22 @@ class AuthState extends StateNotifier<AuthModel> {
     final userCred = await ref.read(authProivder).signInWithCredential(cred);
 
     state = state.copyWith(uid: userCred.user!.uid, loading: false);
+    log('DEBUG: Success Sign In/Log In');
   }
 
   Future logout(WidgetRef ref) async {
-    state = state.copyWith(loading: true);
+    try {
+      state = state.copyWith(loading: true);
 
-    await googleSignIn.disconnect();
-    ref.read(authProivder).signOut();
+      await googleSignIn.disconnect();
+      ref.read(authProivder).signOut();
 
-    state = state.copyWith(uid: null, loading: false);
+      state = state.copyWith(uid: null);
+      log('DEBUG: Signed Out');
+    } catch (e) {
+      log('DEBUG: ${e.toString()}');
+    } finally {
+      state = state.copyWith(loading: false);
+    }
   }
 }
