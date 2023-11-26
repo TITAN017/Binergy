@@ -86,9 +86,8 @@ class _WrapperState extends ConsumerState<Wrapper> {
                 SizedBox(height: 15),
                 //? Google button
                 CustomMaterialButton(
-                  onTap: () {
-                    log('DEBUG : Google Sign In');
-                    ref.read(googleProvider.notifier).signIn(ref);
+                  onTap: () async {
+                    await ref.read(googleProvider.notifier).signIn(ref);
                   },
                   child: Container(
                     decoration: BoxDecoration(

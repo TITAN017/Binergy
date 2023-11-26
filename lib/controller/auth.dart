@@ -1,5 +1,5 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
-import 'dart:developer';
+import 'package:logger/logger.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -48,23 +48,24 @@ class AuthModel {
 
 final googleProvider =
     StateNotifierProvider<AuthState, AuthModel>((ref) => AuthState());
+final logger = Logger();
 
 class AuthState extends StateNotifier<AuthModel> {
   final googleSignIn = GoogleSignIn();
   AuthState() : super(AuthModel(loading: false, state: false));
 
-  Future<bool> signIn(WidgetRef ref) async {
-    log('DEBUG : Google Sign In');
+  Future<UserCredential?> signIn(WidgetRef ref) async {
+    logger.d('DEBUG : Google Sign In');
     try {
-      state = state.copyWith(loading: true);
-
       GoogleSignInAccount user;
 
-      final googleUser = await googleSignIn.signIn();
+      final googleUser = await googleSignIn
+          .signIn()
+          .catchError((onError) => logger.d(onError));
       if (googleUser == null) {
-        log('DEBUG: No user selected');
-        state = state.copyWith(loading: false);
-        return false;
+        logger.d('DEBUG: No user selected');
+
+        return null;
       }
       user = googleUser;
 
@@ -77,30 +78,24 @@ class AuthState extends StateNotifier<AuthModel> {
 
       final userCred = await ref.read(authProivder).signInWithCredential(cred);
 
-      state = state.copyWith(uid: userCred.user!.uid, state: true);
-      log('DEBUG: Success Sign In/Log In');
-      return true;
+      logger.d('DEBUG: Success Sign In/logger In');
+      return userCred;
     } catch (e) {
-      log(e.toString());
-      return false;
-    } finally {
-      state = state.copyWith(loading: false);
+      logger.d(e.toString());
+      return null;
     }
   }
 
-  Future logout(WidgetRef ref) async {
+  Future<String?> logout(WidgetRef ref) async {
     try {
-      state = state.copyWith(loading: true);
-
       await googleSignIn.disconnect();
       ref.read(authProivder).signOut();
 
-      state = state.copyWith(uid: null, state: false);
-      log('DEBUG: Signed Out');
+      logger.d('DEBUG: Signed Out');
+      return null;
     } catch (e) {
-      log('DEBUG: ${e.toString()}');
-    } finally {
-      state = state.copyWith(loading: false);
+      logger.d('DEBUG: ${e.toString()}');
+      return ref.read(authProivder).currentUser!.uid;
     }
   }
 }
