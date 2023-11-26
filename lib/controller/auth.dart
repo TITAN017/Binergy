@@ -59,9 +59,7 @@ class AuthState extends StateNotifier<AuthModel> {
     try {
       GoogleSignInAccount user;
 
-      final googleUser = await googleSignIn
-          .signIn()
-          .catchError((onError) => logger.d(onError));
+      final googleUser = await googleSignIn.signIn();
       if (googleUser == null) {
         logger.d('DEBUG: No user selected');
 

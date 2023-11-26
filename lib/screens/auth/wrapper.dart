@@ -1,9 +1,6 @@
 // ignore_for_file: prefer_const_constructors
 
-import 'dart:developer';
-
 import 'package:binergy/controller/auth.dart';
-import 'package:binergy/controller/repo.dart';
 import 'package:binergy/screens/auth/login.dart';
 import 'package:binergy/screens/auth/signin.dart';
 import 'package:binergy/screens/auth/utils/material_button.dart';
@@ -12,7 +9,6 @@ import 'package:binergy/shared/or_divider.dart';
 import 'package:binergy/shared/snackbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 class Wrapper extends ConsumerStatefulWidget {
   const Wrapper({super.key});
