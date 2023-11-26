@@ -6,7 +6,13 @@ class CustomDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Drawer(
-      backgroundColor: Colors.black54,
+      backgroundColor: Colors.black,
+      width: MediaQuery.of(context).size.width / 3,
+      child: Column(children: [
+        ListTile(
+          title: Text('Hello'),
+        )
+      ]),
     );
   }
 }

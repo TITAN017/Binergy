@@ -1,27 +1,33 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 
-import 'package:binergy/controller/repo.dart';
-import 'package:flutter/widgets.dart';
+import 'package:binergy/controller/request_controller.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:binergy/controller/auth.dart';
+import 'package:binergy/controller/repo.dart';
 
 class UserState {
   final String user;
   final bool loading;
+  final Position? pos;
   UserState({
     required this.user,
     required this.loading,
+    this.pos,
   });
 
   UserState copyWith({
     String? user,
     bool? loading,
+    Position? pos,
   }) {
     return UserState(
       user: user ?? this.user,
       loading: loading ?? this.loading,
+      pos: pos ?? this.pos,
     );
   }
 
@@ -29,6 +35,7 @@ class UserState {
     return <String, dynamic>{
       'user': user,
       'loading': loading,
+      'pos': pos,
     };
   }
 
@@ -36,6 +43,9 @@ class UserState {
     return UserState(
       user: map['user'] as String,
       loading: map['loading'] as bool,
+      pos: map['pos'] != null
+          ? Position.fromMap(map['pos'] as Map<String, dynamic>)
+          : null,
     );
   }
 
@@ -79,5 +89,94 @@ class UserProvider extends StateNotifier<UserState> {
     await Future.delayed(const Duration(milliseconds: 500)).then((value) {
       state = state.copyWith(loading: false);
     });
+  }
+
+  Future currentLocation() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    // Test if location services are enabled.
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      logger.e('Location services are disabled.');
+    }
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        // Permissions are denied
+        logger.e('Location permissions are denied');
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      // Permissions are denied forever, handle appropriately.
+      logger.e(
+          'Location permissions are permanently denied, we cannot request permissions.');
+    }
+
+    // When we reach here, permissions are granted and we can
+    // continue accessing the position of the device.
+    final position = await Geolocator.getCurrentPosition();
+    state = state.copyWith(pos: position);
+    logger.d('lat/lng : ${position.latitude}/${position.longitude}');
+  }
+
+  Future logoutWrapper(BuildContext context, WidgetRef ref) async {
+    final bool res = await showDialog(
+        barrierDismissible: false,
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            backgroundColor: Colors.black,
+            title: const Center(
+              child: Text(
+                'Confirm Logout?',
+                style: TextStyle(fontSize: 20, color: Colors.white),
+              ),
+            ),
+            actionsAlignment: MainAxisAlignment.spaceAround,
+            actions: [
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.greenAccent),
+                onPressed: () {
+                  Navigator.pop(context, false);
+                },
+                child: const Text(
+                  'No',
+                  style: TextStyle(fontSize: 15, color: Colors.black),
+                ),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                onPressed: () {
+                  Navigator.pop(context, true);
+                },
+                child: const Text(
+                  'Yes',
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: Colors.black,
+                  ),
+                ),
+              ),
+            ],
+          );
+        });
+    if (res) {
+      ref.read(userController.notifier).logout(ref);
+    }
+  }
+
+  Future getRoute(WidgetRef ref, Map<String, String> map) async {
+    logger.d('DEBUG: getRoute called');
+    state = state.copyWith(loading: true);
+    final data = await ref.read(requestController.notifier).getRoute(map);
+    state = state.copyWith(loading: false);
+    logger
+        .d((data['features'][0]['geometry']['coordinates'][0] as List).length);
+    return data;
   }
 }

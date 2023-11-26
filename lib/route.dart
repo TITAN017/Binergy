@@ -8,7 +8,7 @@ import 'package:binergy/shared/route_animation.dart';
 final router = GoRouter(
   initialLocation: '/',
   redirect: (ctx, state) async {
-    if (await Future.delayed(const Duration(milliseconds: 200),
+    if (await Future.delayed(const Duration(milliseconds: 500),
         () => FirebaseAuth.instance.currentUser != null)) {
       return '/home';
     }
