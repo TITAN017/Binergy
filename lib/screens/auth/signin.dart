@@ -82,4 +82,12 @@ class _SigninState extends ConsumerState<Signin> {
       ),
     );
   }
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    rePasswordController.dispose();
+    super.dispose();
+  }
 }

@@ -66,4 +66,11 @@ class _LoginState extends ConsumerState<Login> {
       ),
     );
   }
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
 }

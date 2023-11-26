@@ -10,18 +10,22 @@ import 'package:binergy/controller/repo.dart';
 class AuthModel {
   final String? uid;
   final bool loading;
+  final bool state;
   AuthModel({
     this.uid,
     required this.loading,
+    required this.state,
   });
 
   AuthModel copyWith({
     String? uid,
     bool? loading,
+    bool? state,
   }) {
     return AuthModel(
       uid: uid ?? this.uid,
       loading: loading ?? this.loading,
+      state: state ?? this.state,
     );
   }
 
@@ -29,13 +33,15 @@ class AuthModel {
     return <String, dynamic>{
       'uid': uid,
       'loading': loading,
+      'state': state,
     };
   }
 
   factory AuthModel.fromMap(Map<String, dynamic> map) {
     return AuthModel(
-      uid: map['uid'] as String,
+      uid: map['uid'] != null ? map['uid'] as String : null,
       loading: map['loading'] as bool,
+      state: map['state'] as bool,
     );
   }
 }
@@ -45,32 +51,41 @@ final googleProvider =
 
 class AuthState extends StateNotifier<AuthModel> {
   final googleSignIn = GoogleSignIn();
-  AuthState() : super(AuthModel(loading: false));
+  AuthState() : super(AuthModel(loading: false, state: false));
 
-  Future signIn(WidgetRef ref) async {
+  Future<bool> signIn(WidgetRef ref) async {
     log('DEBUG : Google Sign In');
-    state = state.copyWith(loading: true);
+    try {
+      state = state.copyWith(loading: true);
 
-    GoogleSignInAccount user;
+      GoogleSignInAccount user;
 
-    final googleUser = await googleSignIn.signIn();
-    if (googleUser == null) {
-      log('DEBUG: No user selected');
-      return;
+      final googleUser = await googleSignIn.signIn();
+      if (googleUser == null) {
+        log('DEBUG: No user selected');
+        state = state.copyWith(loading: false);
+        return false;
+      }
+      user = googleUser;
+
+      final googleAuth = await user.authentication;
+
+      final cred = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      final userCred = await ref.read(authProivder).signInWithCredential(cred);
+
+      state = state.copyWith(uid: userCred.user!.uid, state: true);
+      log('DEBUG: Success Sign In/Log In');
+      return true;
+    } catch (e) {
+      log(e.toString());
+      return false;
+    } finally {
+      state = state.copyWith(loading: false);
     }
-    user = googleUser;
-
-    final googleAuth = await user.authentication;
-
-    final cred = GoogleAuthProvider.credential(
-      accessToken: googleAuth.accessToken,
-      idToken: googleAuth.idToken,
-    );
-
-    final userCred = await ref.read(authProivder).signInWithCredential(cred);
-
-    state = state.copyWith(uid: userCred.user!.uid, loading: false);
-    log('DEBUG: Success Sign In/Log In');
   }
 
   Future logout(WidgetRef ref) async {
@@ -80,7 +95,7 @@ class AuthState extends StateNotifier<AuthModel> {
       await googleSignIn.disconnect();
       ref.read(authProivder).signOut();
 
-      state = state.copyWith(uid: null);
+      state = state.copyWith(uid: null, state: false);
       log('DEBUG: Signed Out');
     } catch (e) {
       log('DEBUG: ${e.toString()}');
