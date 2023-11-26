@@ -72,4 +72,12 @@ class UserProvider extends StateNotifier<UserState> {
     final String res = await ref.read(googleProvider.notifier).logout(ref);
     state = state.copyWith(user: res, loading: false);
   }
+
+  Future refresh() async {
+    logger.d('Refreshing');
+    state = state.copyWith(loading: true);
+    await Future.delayed(const Duration(milliseconds: 500)).then((value) {
+      state = state.copyWith(loading: false);
+    });
+  }
 }

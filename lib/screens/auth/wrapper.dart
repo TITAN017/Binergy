@@ -42,8 +42,9 @@ class _WrapperState extends ConsumerState<Wrapper> {
                   IconButton(
                     onPressed: () async {
                       await ref.read(userController.notifier).logout(ref);
+                      await ref.read(userController.notifier).refresh();
                     },
-                    icon: Icon(Icons.info_outline),
+                    icon: Icon(Icons.restart_alt_outlined),
                     color: Colors.greenAccent,
                   ),
                 ],
