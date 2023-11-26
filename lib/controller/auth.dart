@@ -84,13 +84,13 @@ class AuthState extends StateNotifier<AuthModel> {
     }
   }
 
-  Future<String?> logout(WidgetRef ref) async {
+  Future<String> logout(WidgetRef ref) async {
     try {
       await googleSignIn.disconnect();
       ref.read(authProivder).signOut();
 
       logger.d('DEBUG: Signed Out');
-      return null;
+      return 'NULL';
     } catch (e) {
       logger.d('DEBUG: ${e.toString()}');
       return ref.read(authProivder).currentUser!.uid;
