@@ -16,102 +16,108 @@ class LocationCard extends StatefulWidget {
 }
 
 class _LocationCardState extends State<LocationCard> {
-  final List<Color> colors = [Colors.green, Colors.orange[300]!, Colors.red];
+  final List<List<Color>> colors = [
+    [Color(0xFF11998e), Color(0xFF38ef7d)],
+    [Color.fromRGBO(255, 190, 32, 1), Color.fromRGBO(251, 112, 71, 1)],
+    [Color(0xFFe52d27), Color(0xFFb31217)]
+  ];
   bool tap = false;
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          tap = !tap;
-        });
-      },
-      child: SizedBox(
-        width: 100,
-        height: 150,
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            AnimatedSwitcher(
-              duration: Duration(milliseconds: 400),
-              child: !tap
-                  ? SizedBox()
-                  : Align(
-                      alignment: Alignment(0, -1.25),
-                      child: AnimatedContainer(
-                        width: 100,
-                        height: 150,
-                        padding: EdgeInsets.symmetric(horizontal: 10),
-                        duration: Duration(milliseconds: 300),
-                        decoration: BoxDecoration(
-                          color: pickColor(),
-                          border: Border.all(color: Colors.white),
-                          borderRadius: BorderRadius.circular(15),
+    return SizedBox(
+      width: 100,
+      height: 150,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          AnimatedSwitcher(
+            duration: Duration(milliseconds: 400),
+            child: !tap
+                ? SizedBox()
+                : Align(
+                    alignment: Alignment(0, -1.25),
+                    child: AnimatedContainer(
+                      width: 120,
+                      height: 150,
+                      padding: EdgeInsets.symmetric(horizontal: 10),
+                      duration: Duration(milliseconds: 300),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: pickColor(),
+                          end: Alignment.bottomRight,
                         ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: [
-                            Flexible(flex: 3, child: Text('Information!')),
-                            Flexible(
-                              flex: 1,
-                              child: Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 5),
-                                child: Consumer(builder: (context, ref, _) {
-                                  final bool flag = ref.watch(
-                                      dataController.select((value) =>
-                                          value.bins.contains(widget.bin.id)));
-                                  return ElevatedButton(
-                                    style: ElevatedButton.styleFrom(
-                                        padding:
-                                            EdgeInsets.symmetric(horizontal: 4),
-                                        backgroundColor: !flag
-                                            ? Colors.greenAccent
-                                            : Colors.red),
-                                    onPressed: () {
-                                      if (flag) {
-                                        ref
-                                            .read(dataController.notifier)
-                                            .removeBin(widget.bin.id);
-                                      } else {
-                                        ref
-                                            .read(dataController.notifier)
-                                            .addBins(widget.bin.id);
-                                      }
-                                    },
-                                    child: FittedBox(
-                                      child: Text(
-                                        !flag ? 'SELECT' : 'REMOVE',
-                                        style: TextStyle(
-                                          color: Colors.black,
-                                          fontWeight: FontWeight.bold,
-                                        ),
+                        border: Border.all(color: Colors.red[500]!, width: 3),
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          Flexible(flex: 5, child: Text('Information!')),
+                          Flexible(
+                            flex: 1,
+                            child: Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 10),
+                              child: Consumer(builder: (context, ref, _) {
+                                final bool flag = ref.watch(
+                                    dataController.select((value) =>
+                                        value.bins.contains(widget.bin.id)));
+                                return ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                      padding:
+                                          EdgeInsets.symmetric(horizontal: 9),
+                                      backgroundColor:
+                                          !flag ? Colors.black : Colors.white),
+                                  onPressed: () {
+                                    if (flag) {
+                                      ref
+                                          .read(dataController.notifier)
+                                          .removeBin(widget.bin.id);
+                                    } else {
+                                      ref
+                                          .read(dataController.notifier)
+                                          .addBins(widget.bin.id);
+                                    }
+                                  },
+                                  child: FittedBox(
+                                    child: Text(
+                                      !flag ? 'SELECT' : 'REMOVE',
+                                      style: TextStyle(
+                                        color:
+                                            !flag ? Colors.white : Colors.black,
                                       ),
                                     ),
-                                  );
-                                }),
-                              ),
+                                  ),
+                                );
+                              }),
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
-            ),
-            Icon(
+                  ),
+          ),
+          GestureDetector(
+            onTap: () {
+              setState(() {
+                tap = !tap;
+              });
+            },
+            child: Icon(
               IconData(
                 0xe3ab,
                 fontFamily: 'MaterialIcons',
               ),
-              color: Colors.red,
-              size: 40,
+              color: pickColor()[0],
+              size: 35,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-  Color pickColor() {
+  List<Color> pickColor() {
     if (widget.bin.state < 35) {
       return colors[0];
     } else if (widget.bin.state < 80) {
