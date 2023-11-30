@@ -1,6 +1,8 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 
+import 'package:binergy/controller/data_controller.dart';
 import 'package:binergy/controller/request_controller.dart';
+import 'package:binergy/shared/snackbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
@@ -13,21 +15,20 @@ class UserState {
   final String user;
   final bool loading;
   final Position? pos;
+  final bool dev;
   UserState({
     required this.user,
     required this.loading,
     this.pos,
+    required this.dev,
   });
 
-  UserState copyWith({
-    String? user,
-    bool? loading,
-    Position? pos,
-  }) {
+  UserState copyWith({String? user, bool? loading, Position? pos, bool? dev}) {
     return UserState(
       user: user ?? this.user,
       loading: loading ?? this.loading,
       pos: pos ?? this.pos,
+      dev: dev ?? this.dev,
     );
   }
 
@@ -36,17 +37,18 @@ class UserState {
       'user': user,
       'loading': loading,
       'pos': pos,
+      'dev': dev
     };
   }
 
   factory UserState.fromMap(Map<String, dynamic> map) {
     return UserState(
-      user: map['user'] as String,
-      loading: map['loading'] as bool,
-      pos: map['pos'] != null
-          ? Position.fromMap(map['pos'] as Map<String, dynamic>)
-          : null,
-    );
+        user: map['user'] as String,
+        loading: map['loading'] as bool,
+        pos: map['pos'] != null
+            ? Position.fromMap(map['pos'] as Map<String, dynamic>)
+            : null,
+        dev: map['dev'] as bool);
   }
 
   @override
@@ -59,7 +61,7 @@ final userController =
     StateNotifierProvider<UserProvider, UserState>((ref) => UserProvider());
 
 class UserProvider extends StateNotifier<UserState> {
-  UserProvider() : super(UserState(user: 'NULL', loading: false));
+  UserProvider() : super(UserState(user: 'NULL', loading: false, dev: false));
 
   Future signIn(BuildContext context, WidgetRef ref) async {
     state = state.copyWith(loading: true);
@@ -178,5 +180,18 @@ class UserProvider extends StateNotifier<UserState> {
     logger
         .d((data['features'][0]['geometry']['coordinates'][0] as List).length);
     return data;
+  }
+
+  void handleBinSelect(
+      BuildContext context, WidgetRef ref, bool flag, String id) {
+    if (flag) {
+      ref.read(dataController.notifier).removeBin(id);
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      showSnackBar(context, 'Removed Bin: $id');
+    } else {
+      ref.read(dataController.notifier).addBins(id);
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      showSnackBar(context, 'Selected Bin: $id');
+    }
   }
 }

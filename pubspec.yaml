@@ -50,6 +50,8 @@ dependencies:
   google_maps_flutter: ^2.5.0
   dio: ^5.3.4
   flutter_map_animations: ^0.5.3
+  percent_indicator: ^4.0.1
+  flutter_map_location_marker: ^8.0.2
 
 dev_dependencies:
   flutter_test:

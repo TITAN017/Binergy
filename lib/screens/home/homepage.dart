@@ -1,6 +1,7 @@
 // ignore_for_file: prefer_const_constructors, avoid_unnecessary_containers
 
 import 'package:binergy/controller/data_controller.dart';
+import 'package:binergy/controller/database_controller.dart';
 import 'package:binergy/controller/ui_controller.dart';
 import 'package:binergy/models/bin_model.dart';
 import 'package:binergy/screens/home/drawer.dart';
@@ -11,6 +12,7 @@ import 'package:binergy/static/project_constants.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_animations/flutter_map_animations.dart';
+import 'package:flutter_map_location_marker/flutter_map_location_marker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
@@ -23,7 +25,7 @@ class HomePage extends ConsumerStatefulWidget {
 }
 
 class _HomePageState extends ConsumerState<HomePage>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late AnimatedMapController mapController;
   @override
   void initState() {
@@ -38,12 +40,14 @@ class _HomePageState extends ConsumerState<HomePage>
   Map<String, dynamic> dummyBin = {
     'id': '1',
     'pos': [12.902502, 77.591832],
-    'state': 90
+    'state': 90,
+    'location': 'JP Nagar 5th Phase'
   };
   @override
   Widget build(BuildContext context) {
     final pos = ref.watch(userController.select((value) => value.pos));
     final routes = ref.watch(dataController.select((value) => value.routes));
+    final bins = ref.watch(binProivder);
     return WillPopScope(
       onWillPop: () async {
         await ref.read(userController.notifier).logout(ref);
@@ -66,17 +70,17 @@ class _HomePageState extends ConsumerState<HomePage>
                   await ref.read(userController.notifier).currentLocation();
                   if (context.mounted) {
                     showSnackBar(context, 'Updating Location');
-                    print(pos);
+
                     mapController.animateTo(
                         dest: LatLng(ref.read(userController).pos!.latitude,
                             ref.read(userController).pos!.longitude),
                         zoom: 15);
                   }
                 },
-                backgroundColor: Colors.greenAccent,
+                backgroundColor: Colors.black,
                 child: Icon(
                   Icons.gps_fixed_outlined,
-                  color: Colors.black,
+                  color: Colors.greenAccent,
                 ),
               ),
               SizedBox(
@@ -92,10 +96,10 @@ class _HomePageState extends ConsumerState<HomePage>
                     context.go('/');
                   }
                 },
-                backgroundColor: Colors.greenAccent,
+                backgroundColor: Colors.black,
                 child: Icon(
                   Icons.logout_outlined,
-                  color: Colors.black,
+                  color: Colors.greenAccent,
                 ),
               ),
               SizedBox(
@@ -109,15 +113,16 @@ class _HomePageState extends ConsumerState<HomePage>
                     'mode': 'drive',
                     'apiKey': ProjectConstants.apiKey
                   };
-                  final data = await ref
+                  /*final data = await ref
                       .read(userController.notifier)
                       .getRoute(ref, map);
-                  ref.read(dataController.notifier).addRoutes(data);
+                  ref.read(dataController.notifier).addRoutes(data);*/
+                  ref.read(dbController.notifier).addBin(Dummy.dummyBin);
                 },
-                backgroundColor: Colors.greenAccent,
+                backgroundColor: Colors.black,
                 child: Icon(
                   Icons.roundabout_left_outlined,
-                  color: Colors.black,
+                  color: Colors.greenAccent,
                 ),
               ),
             ],
@@ -136,15 +141,44 @@ class _HomePageState extends ConsumerState<HomePage>
                   userAgentPackageName: 'com.example.app',
                   subdomains: const ['a', 'b', 'c'],
                 ),
+                CurrentLocationLayer(
+                  followOnLocationUpdate: FollowOnLocationUpdate.always,
+                  turnOnHeadingUpdate: TurnOnHeadingUpdate.never,
+                  style: LocationMarkerStyle(
+                    marker: const DefaultLocationMarker(
+                      child: FittedBox(
+                        child: Icon(
+                          Icons.navigation,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                    markerSize: const Size(20, 20),
+                    markerDirection: MarkerDirection.heading,
+                  ),
+                ),
                 MarkerLayer(
+                  rotate: true,
                   markers: [
-                    Marker(
-                        point: pos != null
-                            ? LatLng(pos.latitude, pos.longitude)
-                            : LatLng(12.9716, 77.5946),
-                        width: 150,
-                        height: 300,
-                        child: LocationCard(bin: Bin.fromMap(dummyBin))),
+                    ...bins.when(data: (data) {
+                      return data
+                          .map(
+                            (e) => Marker(
+                              point: e.pos,
+                              width: 150,
+                              height: 300,
+                              child: LocationCard(bin: e),
+                            ),
+                          )
+                          .toList();
+                    }, error: (_, __) {
+                      ProjectConstants.logger.e(_);
+                      ProjectConstants.logger.e(__);
+                      return [];
+                    }, loading: () {
+                      ProjectConstants.logger.d('Bins : Loading');
+                      return [];
+                    }),
                   ],
                 ),
                 PolylineLayer(
