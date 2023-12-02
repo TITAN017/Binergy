@@ -37,32 +37,18 @@ class _LoginState extends ConsumerState<Login> {
   }
 
   List<GlobalObjectKey<FormState>> keys =
-      List.generate(3, (index) => GlobalObjectKey<FormState>(index));
+      List.generate(4, (index) => GlobalObjectKey<FormState>(index));
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 15),
       child: Form(
+        key: keys[3],
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             SizedBox(height: 20),
-            Text(
-              'Username',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            SizedBox(height: 10),
-            CustomField(
-              tkey: keys[0],
-              hintText: 'Ex: Titan',
-              controller: nameController,
-              validate: (text) => validate(text, 'Username'),
-              flag: false,
-            ),
             SizedBox(height: 25),
             Text(
               'Email Address',
@@ -99,15 +85,13 @@ class _LoginState extends ConsumerState<Login> {
             Button(
               text: 'Login',
               callback: () {
-                final res = keys
-                    .map((e) => e.currentState!.validate())
-                    .every((element) => element == true);
+                final res = keys[3].currentState!.validate();
                 if (res) {
-                  final username = nameController.text;
                   final email = emailController.text;
                   final password = passwordController.text;
-                  ref.read(userController.notifier).signInWithPassword(
-                      context, ref, username, email, password);
+                  ref
+                      .read(userController.notifier)
+                      .logInWithPassword(context, ref, email, password);
                 }
               },
             ),

@@ -26,4 +26,17 @@ class RequestProvider extends StateNotifier<bool> {
       return null;
     }
   }
+
+  Future getLocations(Map<String, String> map) async {
+    try {
+      final url =
+          '${ProjectConstants.autoEndpoint}?text=${map['text']}&format=${map['format']}&apiKey=${map['apiKey']}';
+
+      final response = await dio.get(url);
+      return response.data;
+    } catch (e) {
+      logger.e(e.toString());
+      return null;
+    }
+  }
 }

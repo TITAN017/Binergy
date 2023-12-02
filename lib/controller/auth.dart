@@ -54,7 +54,7 @@ class AuthState extends StateNotifier<AuthModel> {
   final googleSignIn = GoogleSignIn();
   AuthState() : super(AuthModel(loading: false, state: false));
 
-  Future<UserCredential?> signIn(WidgetRef ref) async {
+  Future<List?> signIn(WidgetRef ref) async {
     logger.d('DEBUG : Google Sign In');
     try {
       GoogleSignInAccount user;
@@ -75,6 +75,7 @@ class AuthState extends StateNotifier<AuthModel> {
       );
 
       final userCred = await ref.read(authProivder).signInWithCredential(cred);
+
       //? Update repo
       logger.d('DEBUG : Updating user repo');
       final userRepo = await ref
@@ -87,11 +88,12 @@ class AuthState extends StateNotifier<AuthModel> {
             .read(repoProvider)
             .collection('Users')
             .doc(userCred.user!.uid)
-            .set({'id': userCred.user!.uid});
+            .set(
+                {'id': userCred.user!.uid, 'name': userCred.user!.displayName});
       }
 
       logger.d('DEBUG: Success Sign In/logger In');
-      return userCred;
+      return [userCred, userCred.user!.displayName];
     } catch (e) {
       logger.e(e.toString());
       return null;
@@ -100,7 +102,11 @@ class AuthState extends StateNotifier<AuthModel> {
 
   Future<String> logout(WidgetRef ref) async {
     try {
-      await googleSignIn.disconnect();
+      try {
+        await googleSignIn.disconnect();
+      } catch (e) {
+        logger.d(e.toString());
+      }
       ref.read(authProivder).signOut();
 
       logger.d('DEBUG: Signed Out');
@@ -111,13 +117,34 @@ class AuthState extends StateNotifier<AuthModel> {
     }
   }
 
-  Future<UserCredential?> signInWithPassword(
-      WidgetRef ref, String username, String email, String password) async {
+  Future<List?> logInWithPassword(
+      WidgetRef ref, String email, String password) async {
     logger.d('DEBUG : Google Sign In With Password');
     try {
       final auth = ref.read(authProivder);
 
       final userCred = await auth.signInWithEmailAndPassword(
+          email: email, password: password);
+      final userRepo = await ref
+          .read(repoProvider)
+          .collection('Users')
+          .doc(userCred.user!.uid)
+          .get();
+      logger.d('DEBUG: Success Log In With Password');
+      return [userCred, userRepo['username']];
+    } catch (e) {
+      logger.e(e.toString());
+      return null;
+    }
+  }
+
+  Future<List?> signInWithPassword(
+      WidgetRef ref, String username, String email, String password) async {
+    logger.d('DEBUG : Google Sign In With Password');
+    try {
+      final auth = ref.read(authProivder);
+
+      final userCred = await auth.createUserWithEmailAndPassword(
           email: email, password: password);
       //? Updating userRepo
       logger.d('DEBUG : Updating user repo');
@@ -135,7 +162,7 @@ class AuthState extends StateNotifier<AuthModel> {
       }
 
       logger.d('DEBUG: Success Sign In With Password');
-      return userCred;
+      return [userCred, username];
     } catch (e) {
       logger.e(e.toString());
       return null;

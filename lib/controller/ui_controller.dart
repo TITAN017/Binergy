@@ -15,19 +15,23 @@ import 'package:binergy/controller/repo.dart';
 
 class UserState {
   final String user;
+  final String name;
   final bool loading;
   final Position? pos;
   final bool dev;
   UserState({
     required this.user,
+    required this.name,
     required this.loading,
     this.pos,
     required this.dev,
   });
 
-  UserState copyWith({String? user, bool? loading, Position? pos, bool? dev}) {
+  UserState copyWith(
+      {String? user, bool? loading, Position? pos, bool? dev, String? name}) {
     return UserState(
       user: user ?? this.user,
+      name: name ?? this.name,
       loading: loading ?? this.loading,
       pos: pos ?? this.pos,
       dev: dev ?? this.dev,
@@ -45,6 +49,7 @@ class UserState {
 
   factory UserState.fromMap(Map<String, dynamic> map) {
     return UserState(
+        name: map['name'] as String,
         user: map['user'] as String,
         loading: map['loading'] as bool,
         pos: map['pos'] != null
@@ -63,13 +68,29 @@ final userController =
     StateNotifierProvider<UserProvider, UserState>((ref) => UserProvider());
 
 class UserProvider extends StateNotifier<UserState> {
-  UserProvider() : super(UserState(user: 'NULL', loading: false, dev: false));
+  UserProvider()
+      : super(
+            UserState(user: 'NULL', loading: false, dev: false, name: 'NULL'));
 
   Future signIn(BuildContext context, WidgetRef ref) async {
     state = state.copyWith(loading: true);
     final res = await ref.read(googleProvider.notifier).signIn(ref);
     if (res != null && context.mounted) {
-      state = state.copyWith(user: res.user!.uid);
+      state = state.copyWith(user: res[0].user!.uid, name: res[1]);
+      logger.d('routing to /home');
+      context.go('/home');
+    }
+    state = state.copyWith(loading: false);
+  }
+
+  Future logInWithPassword(BuildContext context, WidgetRef ref, String email,
+      String password) async {
+    state = state.copyWith(loading: true);
+    final res = await ref
+        .read(googleProvider.notifier)
+        .logInWithPassword(ref, email, password);
+    if (res != null && context.mounted) {
+      state = state.copyWith(user: res[0].user!.uid, name: res[1]);
       logger.d('routing to /home');
       context.go('/home');
     }
@@ -83,7 +104,7 @@ class UserProvider extends StateNotifier<UserState> {
         .read(googleProvider.notifier)
         .signInWithPassword(ref, username, email, password);
     if (res != null && context.mounted) {
-      state = state.copyWith(user: res.user!.uid);
+      state = state.copyWith(user: res[0].user!.uid, name: res[1]);
       logger.d('routing to /home');
       context.go('/home');
     }
@@ -98,7 +119,7 @@ class UserProvider extends StateNotifier<UserState> {
     }
     state = state.copyWith(loading: true);
     final String res = await ref.read(googleProvider.notifier).logout(ref);
-    state = state.copyWith(user: res, loading: false);
+    state = state.copyWith(user: res, loading: false, name: 'NULL');
   }
 
   Future refresh() async {
@@ -141,10 +162,10 @@ class UserProvider extends StateNotifier<UserState> {
     logger.d('lat/lng : ${position.latitude}/${position.longitude}');
   }
 
-  Future logoutWrapper(BuildContext context, WidgetRef ref) async {
+  Future logoutWrapper(BuildContext ctx, WidgetRef ref) async {
     final bool res = await showDialog(
         barrierDismissible: false,
-        context: context,
+        context: ctx,
         builder: (context) {
           return AlertDialog(
             backgroundColor: Colors.black,
@@ -161,6 +182,7 @@ class UserProvider extends StateNotifier<UserState> {
                     backgroundColor: Colors.greenAccent),
                 onPressed: () {
                   Navigator.pop(context, false);
+                  Scaffold.of(ref.context).openEndDrawer();
                 },
                 child: const Text(
                   'No',
@@ -170,7 +192,7 @@ class UserProvider extends StateNotifier<UserState> {
               ElevatedButton(
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                 onPressed: () {
-                  Navigator.pop(context, true);
+                  Navigator.pop(ctx, true);
                 },
                 child: const Text(
                   'Yes',
@@ -185,8 +207,8 @@ class UserProvider extends StateNotifier<UserState> {
         });
     if (res) {
       ref.read(userController.notifier).logout(ref);
-      if (context.mounted) {
-        context.go('/');
+      if (ctx.mounted) {
+        ctx.go('/');
       }
     }
   }

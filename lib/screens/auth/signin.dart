@@ -20,7 +20,7 @@ class _SigninState extends ConsumerState<Signin> {
   final TextEditingController rePasswordController = TextEditingController();
 
   List<GlobalObjectKey<FormState>> keys =
-      List.generate(4, (index) => GlobalObjectKey<FormState>(index));
+      List.generate(5, (index) => GlobalObjectKey<FormState>(index));
 
   String? validate(String? text, String type) {
     switch (type) {
@@ -45,6 +45,7 @@ class _SigninState extends ConsumerState<Signin> {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 15),
       child: Form(
+        key: keys[4],
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -116,9 +117,7 @@ class _SigninState extends ConsumerState<Signin> {
             Button(
               text: 'Sign In',
               callback: () {
-                final res = keys
-                    .map((e) => e.currentState!.validate())
-                    .every((element) => element == true);
+                final res = keys[4].currentState!.validate();
                 if (res) {
                   final username = nameController.text;
                   final email = emailController.text;

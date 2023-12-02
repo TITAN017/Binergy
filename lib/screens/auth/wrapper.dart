@@ -5,6 +5,7 @@ import 'package:binergy/screens/auth/login.dart';
 import 'package:binergy/screens/auth/signin.dart';
 import 'package:binergy/screens/auth/utils/material_button.dart';
 import 'package:binergy/screens/auth/utils/rep_animation.dart';
+import 'package:binergy/shared/loading_animation.dart';
 import 'package:binergy/shared/or_divider.dart';
 import 'package:binergy/shared/snackbar.dart';
 import 'package:flutter/material.dart';
@@ -26,6 +27,9 @@ class _WrapperState extends ConsumerState<Wrapper> {
         context, flag ? 'Switched to Log in!' : 'Switched to Sign in!');
     setState(() {});
   }
+
+  final login = Login();
+  final signin = Signin();
 
   @override
   Widget build(BuildContext context) {
@@ -56,65 +60,68 @@ class _WrapperState extends ConsumerState<Wrapper> {
                 backgroundColor: Colors.black,
                 foregroundColor: Colors.black,
               ),
-        body: AnimatedSwitcher(
-          duration: Duration(milliseconds: 500),
-          child: ref.watch(userController
+        body: IndexedStack(
+          index: ref.watch(userController
                   .select((value) => value.loading || value.user != 'NULL'))
-              ? Center(
-                  child: CircularProgressIndicator(color: Colors.greenAccent),
-                )
-              : SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      RepAnimation(name: './lib/assets/1.json'),
-                      AnimatedSwitcher(
-                        duration: Duration(milliseconds: 750),
-                        child: flag ? const Login() : const Signin(),
-                      ),
-                      SizedBox(height: 10),
-                      Text(
-                        flag
-                            ? 'Don\'t have an account?'
-                            : 'Already have an account?',
-                        style: TextStyle(color: Colors.grey),
-                      ),
-                      TextButton(
-                        onPressed: toggle,
-                        child: Text(
-                          flag ? 'Sign In' : 'Log In',
-                          style: TextStyle(
-                            color: Colors.white,
-                            decoration: TextDecoration.underline,
-                            decorationColor: Colors.white,
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: 15),
-                      OrDivider(),
-                      SizedBox(height: 15),
-                      //? Google button
-                      CustomMaterialButton(
-                        onTap: () async {
-                          await ref
-                              .read(userController.notifier)
-                              .signIn(context, ref);
-                        },
-                        child: Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                          padding: EdgeInsets.symmetric(
-                              horizontal: 20, vertical: 10),
-                          child: Image.asset(
-                            './lib/assets/google.png',
-                            height: 40,
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: 15),
-                    ],
+              ? 0
+              : 1,
+          children: [
+            Center(
+              child: CustomLoading(name: './lib/assets/recycle.json'),
+            ),
+            SingleChildScrollView(
+              child: Column(
+                children: [
+                  RepAnimation(name: './lib/assets/1.json'),
+                  AnimatedSwitcher(
+                    duration: Duration(milliseconds: 750),
+                    child: flag ? login : signin,
                   ),
-                ),
+                  SizedBox(height: 10),
+                  Text(
+                    flag
+                        ? 'Don\'t have an account?'
+                        : 'Already have an account?',
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                  TextButton(
+                    onPressed: toggle,
+                    child: Text(
+                      flag ? 'Sign In' : 'Log In',
+                      style: TextStyle(
+                        color: Colors.white,
+                        decoration: TextDecoration.underline,
+                        decorationColor: Colors.white,
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 15),
+                  OrDivider(),
+                  SizedBox(height: 15),
+                  //? Google button
+                  CustomMaterialButton(
+                    onTap: () async {
+                      await ref
+                          .read(userController.notifier)
+                          .signIn(context, ref);
+                    },
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                      child: Image.asset(
+                        './lib/assets/google.png',
+                        height: 40,
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 15),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
