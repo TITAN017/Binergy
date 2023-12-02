@@ -18,9 +18,8 @@ class RequestProvider extends StateNotifier<bool> {
     try {
       final url =
           '${ProjectConstants.endpoint}?waypoints=${map['waypoints']}&mode=${map['mode']}&apiKey=${map['apiKey']}';
-      final dummy =
-          'https://api.geoapify.com/v1/routing?waypoints=12.9767936,77.590082|12.7632858,75.2018421&mode=drive&apiKey=d49c9757b5fb4cc79841eb5356a01109';
-      final response = await dio.get(dummy);
+
+      final response = await dio.get(url);
       return response.data;
     } catch (e) {
       logger.e(e.toString());

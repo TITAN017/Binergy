@@ -75,11 +75,25 @@ class AuthState extends StateNotifier<AuthModel> {
       );
 
       final userCred = await ref.read(authProivder).signInWithCredential(cred);
+      //? Update repo
+      logger.d('DEBUG : Updating user repo');
+      final userRepo = await ref
+          .read(repoProvider)
+          .collection('Users')
+          .doc(userCred.user!.uid)
+          .get();
+      if (!userRepo.exists) {
+        await ref
+            .read(repoProvider)
+            .collection('Users')
+            .doc(userCred.user!.uid)
+            .set({'id': userCred.user!.uid});
+      }
 
       logger.d('DEBUG: Success Sign In/logger In');
       return userCred;
     } catch (e) {
-      logger.d(e.toString());
+      logger.e(e.toString());
       return null;
     }
   }
@@ -92,8 +106,39 @@ class AuthState extends StateNotifier<AuthModel> {
       logger.d('DEBUG: Signed Out');
       return 'NULL';
     } catch (e) {
-      logger.d('DEBUG: ${e.toString()}');
+      logger.e('DEBUG: ${e.toString()}');
       return ref.read(authProivder).currentUser!.uid;
+    }
+  }
+
+  Future<UserCredential?> signInWithPassword(
+      WidgetRef ref, String username, String email, String password) async {
+    logger.d('DEBUG : Google Sign In With Password');
+    try {
+      final auth = ref.read(authProivder);
+
+      final userCred = await auth.signInWithEmailAndPassword(
+          email: email, password: password);
+      //? Updating userRepo
+      logger.d('DEBUG : Updating user repo');
+      final userRepo = await ref
+          .read(repoProvider)
+          .collection('Users')
+          .doc(userCred.user!.uid)
+          .get();
+      if (!userRepo.exists) {
+        await ref
+            .read(repoProvider)
+            .collection('Users')
+            .doc(userCred.user!.uid)
+            .set({'username': username, 'id': userCred.user!.uid});
+      }
+
+      logger.d('DEBUG: Success Sign In With Password');
+      return userCred;
+    } catch (e) {
+      logger.e(e.toString());
+      return null;
     }
   }
 }

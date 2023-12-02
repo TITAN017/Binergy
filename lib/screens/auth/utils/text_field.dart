@@ -7,12 +7,14 @@ class CustomField extends StatefulWidget {
   final String? Function(String?) validate;
   final bool flag;
   final String hintText;
+  final GlobalObjectKey<FormState> tkey;
   const CustomField(
       {super.key,
       required this.controller,
       required this.validate,
       required this.flag,
-      required this.hintText});
+      required this.hintText,
+      required this.tkey});
 
   @override
   State<CustomField> createState() => _CustomFieldState();
@@ -29,6 +31,7 @@ class _CustomFieldState extends State<CustomField> {
   @override
   Widget build(BuildContext context) {
     return TextFormField(
+      key: widget.tkey,
       obscureText: state,
       controller: widget.controller,
       validator: widget.validate,

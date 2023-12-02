@@ -2,6 +2,8 @@
 
 import 'package:binergy/controller/data_controller.dart';
 import 'package:binergy/controller/request_controller.dart';
+import 'package:binergy/models/bin_model.dart';
+import 'package:binergy/shared/services.dart';
 import 'package:binergy/shared/snackbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -66,6 +68,20 @@ class UserProvider extends StateNotifier<UserState> {
   Future signIn(BuildContext context, WidgetRef ref) async {
     state = state.copyWith(loading: true);
     final res = await ref.read(googleProvider.notifier).signIn(ref);
+    if (res != null && context.mounted) {
+      state = state.copyWith(user: res.user!.uid);
+      logger.d('routing to /home');
+      context.go('/home');
+    }
+    state = state.copyWith(loading: false);
+  }
+
+  Future signInWithPassword(BuildContext context, WidgetRef ref,
+      String username, String email, String password) async {
+    state = state.copyWith(loading: true);
+    final res = await ref
+        .read(googleProvider.notifier)
+        .signInWithPassword(ref, username, email, password);
     if (res != null && context.mounted) {
       state = state.copyWith(user: res.user!.uid);
       logger.d('routing to /home');
@@ -169,29 +185,38 @@ class UserProvider extends StateNotifier<UserState> {
         });
     if (res) {
       ref.read(userController.notifier).logout(ref);
+      if (context.mounted) {
+        context.go('/');
+      }
     }
   }
 
-  Future getRoute(WidgetRef ref, Map<String, String> map) async {
+  Future getRoute(WidgetRef ref) async {
     logger.d('DEBUG: getRoute called');
     state = state.copyWith(loading: true);
-    final data = await ref.read(requestController.notifier).getRoute(map);
+    final bins = ref.read(dataController).bins as List<Bin>;
+    if (bins.length < 2) {
+      logger.e('Select 2 Bins');
+      state = state.copyWith(loading: false);
+      return;
+    }
+    final data = await ref
+        .read(requestController.notifier)
+        .getRoute(Services.getRouteMap(bins, 'drive'));
+    ref.read(dataController.notifier).addRoutes(data);
     state = state.copyWith(loading: false);
-    logger
-        .d((data['features'][0]['geometry']['coordinates'][0] as List).length);
-    return data;
   }
 
   void handleBinSelect(
-      BuildContext context, WidgetRef ref, bool flag, String id) {
+      BuildContext context, WidgetRef ref, bool flag, Bin bin) {
     if (flag) {
-      ref.read(dataController.notifier).removeBin(id);
+      ref.read(dataController.notifier).removeBin(bin);
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      showSnackBar(context, 'Removed Bin: $id');
+      showSnackBar(context, 'Removed Bin: ${bin.id}');
     } else {
-      ref.read(dataController.notifier).addBins(id);
+      ref.read(dataController.notifier).addBins(bin);
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      showSnackBar(context, 'Selected Bin: $id');
+      showSnackBar(context, 'Selected Bin: ${bin.id}');
     }
   }
 }

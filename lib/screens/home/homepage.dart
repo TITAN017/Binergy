@@ -108,16 +108,9 @@ class _HomePageState extends ConsumerState<HomePage>
               FloatingActionButton(
                 heroTag: '3',
                 onPressed: () async {
-                  final Map<String, String> map = {
-                    'waypoints': '77.5946%2C12.9716%7C75.2071%2C12.7687',
-                    'mode': 'drive',
-                    'apiKey': ProjectConstants.apiKey
-                  };
-                  /*final data = await ref
-                      .read(userController.notifier)
-                      .getRoute(ref, map);
-                  ref.read(dataController.notifier).addRoutes(data);*/
-                  ref.read(dbController.notifier).addBin(Dummy.dummyBin);
+                  await ref.read(userController.notifier).getRoute(ref);
+
+                  //ref.read(dbController.notifier).addBin(Dummy.dummyBin);
                 },
                 backgroundColor: Colors.black,
                 child: Icon(
@@ -127,75 +120,72 @@ class _HomePageState extends ConsumerState<HomePage>
               ),
             ],
           ),
-          body: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            child: FlutterMap(
-              mapController: mapController.mapController,
-              options: MapOptions(
-                initialCenter: LatLng(12.9716, 77.5946),
-                initialZoom: 15,
+          body: FlutterMap(
+            mapController: mapController.mapController,
+            options: MapOptions(
+              initialCenter: LatLng(12.9716, 77.5946),
+              initialZoom: 15,
+            ),
+            children: [
+              TileLayer(
+                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                userAgentPackageName: 'com.example.app',
+                subdomains: const ['a', 'b', 'c'],
               ),
-              children: [
-                TileLayer(
-                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                  userAgentPackageName: 'com.example.app',
-                  subdomains: const ['a', 'b', 'c'],
-                ),
-                CurrentLocationLayer(
-                  followOnLocationUpdate: FollowOnLocationUpdate.always,
-                  turnOnHeadingUpdate: TurnOnHeadingUpdate.never,
-                  style: LocationMarkerStyle(
-                    marker: const DefaultLocationMarker(
-                      child: FittedBox(
-                        child: Icon(
-                          Icons.navigation,
-                          color: Colors.white,
-                        ),
+              CurrentLocationLayer(
+                followOnLocationUpdate: FollowOnLocationUpdate.never,
+                turnOnHeadingUpdate: TurnOnHeadingUpdate.never,
+                style: LocationMarkerStyle(
+                  marker: const DefaultLocationMarker(
+                    child: FittedBox(
+                      child: Icon(
+                        Icons.navigation,
+                        color: Colors.white,
                       ),
                     ),
-                    markerSize: const Size(20, 20),
-                    markerDirection: MarkerDirection.heading,
                   ),
+                  markerSize: const Size(20, 20),
+                  markerDirection: MarkerDirection.heading,
                 ),
-                MarkerLayer(
-                  rotate: true,
-                  markers: [
-                    ...bins.when(data: (data) {
-                      return data
-                          .map(
-                            (e) => Marker(
-                              point: e.pos,
-                              width: 150,
-                              height: 300,
-                              child: LocationCard(bin: e),
-                            ),
-                          )
-                          .toList();
-                    }, error: (_, __) {
-                      ProjectConstants.logger.e(_);
-                      ProjectConstants.logger.e(__);
-                      return [];
-                    }, loading: () {
-                      ProjectConstants.logger.d('Bins : Loading');
-                      return [];
-                    }),
-                  ],
-                ),
-                PolylineLayer(
-                  polylines: [
-                    Polyline(
-                      strokeWidth: 2,
-                      points: routes.map((e) {
-                        return LatLng(e[1], e[0]);
-                      }).toList(),
-                      color: Colors.black,
-                      borderColor: Colors.greenAccent,
-                      borderStrokeWidth: 3,
-                    ),
-                  ],
-                ),
-              ],
-            ),
+              ),
+              MarkerLayer(
+                rotate: true,
+                markers: [
+                  ...bins.when(data: (data) {
+                    return data
+                        .map(
+                          (e) => Marker(
+                            point: e.pos,
+                            width: 150,
+                            height: 300,
+                            child: LocationCard(bin: e),
+                          ),
+                        )
+                        .toList();
+                  }, error: (_, __) {
+                    ProjectConstants.logger.e(_);
+                    ProjectConstants.logger.e(__);
+                    return [];
+                  }, loading: () {
+                    ProjectConstants.logger.d('Bins : Loading');
+                    return [];
+                  }),
+                ],
+              ),
+              PolylineLayer(
+                polylines: [
+                  Polyline(
+                    strokeWidth: 2,
+                    points: routes.map((e) {
+                      return LatLng(e[1], e[0]);
+                    }).toList(),
+                    color: Colors.black,
+                    borderColor: Colors.greenAccent,
+                    borderStrokeWidth: 3,
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
       ),

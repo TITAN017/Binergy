@@ -43,4 +43,9 @@ class Bin {
         state: map['state'].toDouble(),
         location: map['location']);
   }
+
+  @override
+  String toString() {
+    return id;
+  }
 }

@@ -23,7 +23,7 @@ class _LocationCardState extends ConsumerState<LocationCard> {
   @override
   Widget build(BuildContext context) {
     final bool flag = ref.watch(
-        dataController.select((value) => value.bins.contains(widget.bin.id)));
+        dataController.select((value) => value.bins.contains(widget.bin)));
     return SizedBox(
       width: 100,
       height: 150,
@@ -206,7 +206,7 @@ class _LocationCardState extends ConsumerState<LocationCard> {
                                           ref
                                               .read(userController.notifier)
                                               .handleBinSelect(context, ref,
-                                                  flag, widget.bin.id);
+                                                  flag, widget.bin);
                                         },
                                         child: FittedBox(
                                           child: Text(
@@ -255,7 +255,7 @@ class _LocationCardState extends ConsumerState<LocationCard> {
                       decoration: BoxDecoration(
                           color: Colors.black, shape: BoxShape.circle),
                       child: Text(
-                        '${ref.watch(dataController.select((value) => value.bins.indexOf(widget.bin.id) + 1))}',
+                        '${ref.watch(dataController.select((value) => value.bins.indexOf(widget.bin) + 1))}',
                         style: TextStyle(color: Colors.greenAccent),
                       ),
                     ),
