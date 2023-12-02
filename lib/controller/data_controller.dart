@@ -1,33 +1,50 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'package:binergy/models/bin_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:logger/logger.dart';
 
 class AppData {
-  final List routes;
-  final List bins;
-  AppData({required this.routes, required this.bins});
+  final List allRoutes;
+  final List route;
+  final List routeLocs;
+  final LatLng tapPos;
+  AppData(
+      {required this.route,
+      required this.routeLocs,
+      required this.tapPos,
+      required this.allRoutes});
 
-  AppData copyWith({List? routes, List? bins}) {
-    return AppData(routes: routes ?? this.routes, bins: bins ?? this.bins);
+  AppData copyWith(
+      {List? route, List? routeLocs, LatLng? tapPos, List? allRoutes}) {
+    return AppData(
+        allRoutes: allRoutes ?? this.allRoutes,
+        route: route ?? this.route,
+        routeLocs: routeLocs ?? this.routeLocs,
+        tapPos: tapPos ?? this.tapPos);
   }
 
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
-      'routes': routes,
-      'bins': bins,
+      'allRoutes': allRoutes,
+      'route': route,
+      'routeLocs': routeLocs,
+      'tapPos': tapPos
     };
   }
 
   factory AppData.fromMap(Map<String, dynamic> map) {
     return AppData(
-      routes: List.from(
-        (map['routes'] as List),
-      ),
-      bins: List.from(
-        (map['bins'] as List),
-      ),
-    );
+        allRoutes: List.from(
+          (map['allRoutes'] as List),
+        ),
+        route: List.from(
+          (map['route'] as List),
+        ),
+        routeLocs: List.from(
+          (map['routeLocs'] as List),
+        ),
+        tapPos: LatLng(map['tapPos'][0], map['tapPos'][1]));
   }
 }
 
@@ -35,33 +52,66 @@ final dataController =
     StateNotifierProvider<DataProvider, AppData>((ref) => DataProvider());
 
 class DataProvider extends StateNotifier<AppData> {
-  DataProvider() : super(AppData(routes: [], bins: []));
+  DataProvider()
+      : super(
+          AppData(
+              route: [], routeLocs: [], tapPos: LatLng(0, 0), allRoutes: []),
+        );
 
   final logger = Logger();
 
-  void addRoutes(Map<String, dynamic> data) {
-    logger.d(data);
+  void addRoutes(List<Map<String, dynamic>> data) {
+    logger.e(data);
     state = state.copyWith(
-        routes: data['features'][0]['geometry']['coordinates'][0]);
+        allRoutes: data
+            .map((e) => [
+                  e['features'][0]['geometry']['coordinates'][0],
+                  e['features'][0]['properties']['time']
+                ])
+            .toList());
+    state = state.copyWith(route: state.allRoutes[0][0]);
   }
 
-  void addBins(Bin bin) {
-    if (state.bins.length == 2) {
-      logger.e('More than 2 bins selected');
+  void updateRoute(int index) {
+    logger.e(index);
+
+    state = state.copyWith(route: state.allRoutes[index][0]);
+  }
+
+  void addrouteLocs(LatLng routeLoc) {
+    if (state.routeLocs.length == 2) {
+      logger.e('More than 2 Locations are selected');
       return;
     }
-    List<Bin> list = [...state.bins];
-    list.add(bin);
-    state = state.copyWith(bins: list);
-    logger.d('DEBUG : Added bin : ${bin.id}');
+    List list = [...state.routeLocs];
+    list.add(routeLoc);
+    state = state.copyWith(routeLocs: list);
+    logger.d('DEBUG : Added Loc : $routeLoc');
   }
 
   void removeBin(Bin bin) {
-    if (state.bins.contains(bin)) {
-      state = state.copyWith(bins: state.bins..remove(bin));
+    if (state.routeLocs.contains(bin.pos)) {
+      state = state.copyWith(routeLocs: state.routeLocs..remove(bin.pos));
       logger.d('DEBUG : Removed bin : ${bin.id}');
       return;
     }
     logger.e("${bin.id} Bin doesnt exist");
+  }
+
+  void updateTapPos(WidgetRef ref, LatLng tapPos) {
+    state = state.copyWith(routeLocs: state.routeLocs..remove(state.tapPos));
+
+    if (tapPos != const LatLng(0, 0)) {
+      state = state.copyWith(
+        routeLocs: state.routeLocs..add(tapPos),
+      );
+    }
+    state = state.copyWith(tapPos: tapPos);
+    logger.d('DEBUG : added RouteLoc updated');
+    logger.d(state.routeLocs);
+  }
+
+  void clearRoutes() {
+    state = state.copyWith(route: [], routeLocs: [], allRoutes: []);
   }
 }

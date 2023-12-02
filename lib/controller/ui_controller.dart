@@ -216,27 +216,30 @@ class UserProvider extends StateNotifier<UserState> {
   Future getRoute(WidgetRef ref) async {
     logger.d('DEBUG: getRoute called');
     state = state.copyWith(loading: true);
-    final bins = ref.read(dataController).bins as List<Bin>;
-    if (bins.length < 2) {
-      logger.e('Select 2 Bins');
+    final routeLocs = ref.read(dataController).routeLocs as List;
+    if (routeLocs.length < 2) {
+      logger.e('Select 2 Locations');
       state = state.copyWith(loading: false);
       return;
     }
-    final data = await ref
+    final List<Map<String, dynamic>> data = await ref
         .read(requestController.notifier)
-        .getRoute(Services.getRouteMap(bins, 'drive'));
+        .getRoute(Services.getRouteMap(routeLocs));
     ref.read(dataController.notifier).addRoutes(data);
     state = state.copyWith(loading: false);
   }
 
   void handleBinSelect(
       BuildContext context, WidgetRef ref, bool flag, Bin bin) {
+    logger.d(ref.read(dataController).routeLocs);
+    logger.d(ref.read(dataController).tapPos);
     if (flag) {
       ref.read(dataController.notifier).removeBin(bin);
+      logger.d(ref.read(dataController).routeLocs);
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       showSnackBar(context, 'Removed Bin: ${bin.id}');
     } else {
-      ref.read(dataController.notifier).addBins(bin);
+      ref.read(dataController.notifier).addrouteLocs(bin.pos);
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       showSnackBar(context, 'Selected Bin: ${bin.id}');
     }

@@ -14,16 +14,23 @@ class RequestProvider extends StateNotifier<bool> {
   final dio = Dio();
   final logger = Logger();
 
-  Future getRoute(Map<String, String> map) async {
+  Future<List<Map<String, dynamic>>> getRoute(Map<String, String> map) async {
     try {
+      List modes = ['drive', 'motorcycle', 'walk'];
+      List<Map<String, dynamic>> allRoutes = [];
       final url =
-          '${ProjectConstants.endpoint}?waypoints=${map['waypoints']}&mode=${map['mode']}&apiKey=${map['apiKey']}';
+          '${ProjectConstants.endpoint}?waypoints=${map['waypoints']}&mode=MODE&traffic=approximated&apiKey=${map['apiKey']}';
 
-      final response = await dio.get(url);
-      return response.data;
+      for (int i = 0; i < 3; i++) {
+        final rurl = url.replaceAll(RegExp(r'MODE'), modes[i]);
+        final response = await dio.get(rurl);
+        allRoutes.add(response.data as Map<String, dynamic>);
+      }
+
+      return allRoutes;
     } catch (e) {
       logger.e(e.toString());
-      return null;
+      return [];
     }
   }
 

@@ -22,8 +22,8 @@ class _LocationCardState extends ConsumerState<LocationCard> {
   bool infoTap = false;
   @override
   Widget build(BuildContext context) {
-    final bool flag = ref.watch(
-        dataController.select((value) => value.bins.contains(widget.bin)));
+    final bool flag = ref.watch(dataController
+        .select((value) => value.routeLocs.contains(widget.bin.pos)));
     return SizedBox(
       width: 100,
       height: 150,
@@ -56,7 +56,7 @@ class _LocationCardState extends ConsumerState<LocationCard> {
                                     MainAxisAlignment.spaceAround,
                                 children: [
                                   GestureDetector(
-                                    behavior: HitTestBehavior.translucent,
+                                    behavior: HitTestBehavior.deferToChild,
                                     onTap: () {
                                       setState(() {
                                         infoTap = !infoTap;
@@ -192,22 +192,24 @@ class _LocationCardState extends ConsumerState<LocationCard> {
                                   //? Select Button
                                   Flexible(
                                     flex: 1,
-                                    child: Padding(
-                                      padding: const EdgeInsets.only(
-                                          right: 10, left: 10, top: 5),
-                                      child: ElevatedButton(
-                                        style: ElevatedButton.styleFrom(
-                                            padding: EdgeInsets.symmetric(
-                                                horizontal: 10),
-                                            backgroundColor: !flag
+                                    child: GestureDetector(
+                                      behavior: HitTestBehavior.translucent,
+                                      onTap: () {
+                                        ref
+                                            .read(userController.notifier)
+                                            .handleBinSelect(
+                                                context, ref, flag, widget.bin);
+                                      },
+                                      child: Container(
+                                        margin: const EdgeInsets.only(
+                                            right: 10, left: 10, top: 5),
+                                        padding: EdgeInsets.symmetric(
+                                            horizontal: 10),
+                                        decoration: ShapeDecoration(
+                                            shape: StadiumBorder(),
+                                            color: !flag
                                                 ? Colors.black
                                                 : Colors.greenAccent),
-                                        onPressed: () {
-                                          ref
-                                              .read(userController.notifier)
-                                              .handleBinSelect(context, ref,
-                                                  flag, widget.bin);
-                                        },
                                         child: FittedBox(
                                           child: Text(
                                             !flag ? 'SELECT' : 'REMOVE',
@@ -228,6 +230,7 @@ class _LocationCardState extends ConsumerState<LocationCard> {
                   ),
           ),
           GestureDetector(
+            behavior: HitTestBehavior.translucent,
             onTap: () {
               setState(() {
                 tap = !tap;
@@ -255,7 +258,7 @@ class _LocationCardState extends ConsumerState<LocationCard> {
                       decoration: BoxDecoration(
                           color: Colors.black, shape: BoxShape.circle),
                       child: Text(
-                        '${ref.watch(dataController.select((value) => value.bins.indexOf(widget.bin) + 1))}',
+                        '${ref.watch(dataController.select((value) => value.routeLocs.indexOf(widget.bin.pos) + 1))}',
                         style: TextStyle(color: Colors.greenAccent),
                       ),
                     ),

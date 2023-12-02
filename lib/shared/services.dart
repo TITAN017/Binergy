@@ -2,11 +2,10 @@ import 'package:binergy/models/bin_model.dart';
 import 'package:binergy/static/project_constants.dart';
 
 class Services {
-  static Map<String, String> getRouteMap(List<Bin> bins, String mode) {
+  static Map<String, String> getRouteMap(List routeLocs) {
     return {
       'waypoints':
-          '${bins[0].pos.latitude},${bins[0].pos.longitude}|${bins[1].pos.latitude},${bins[1].pos.longitude}',
-      'mode': mode,
+          '${routeLocs[0].latitude},${routeLocs[0].longitude}|${routeLocs[1].latitude},${routeLocs[1].longitude}',
       'apiKey': ProjectConstants.apiKey
     };
   }

@@ -3,11 +3,9 @@
 import 'package:binergy/controller/data_controller.dart';
 import 'package:binergy/controller/database_controller.dart';
 import 'package:binergy/controller/ui_controller.dart';
-import 'package:binergy/models/bin_model.dart';
 import 'package:binergy/screens/home/drawer.dart';
 import 'package:binergy/screens/home/utils/appbar.dart';
 import 'package:binergy/screens/home/utils/floating_icon.dart';
-import 'package:binergy/shared/dummy.dart';
 import 'package:binergy/shared/snackbar.dart';
 import 'package:binergy/static/project_constants.dart';
 import 'package:flutter/material.dart';
@@ -40,8 +38,8 @@ class _HomePageState extends ConsumerState<HomePage>
 
   @override
   Widget build(BuildContext context) {
-    final pos = ref.watch(userController.select((value) => value.pos));
-    final routes = ref.watch(dataController.select((value) => value.routes));
+    final tapPos = ref.watch(dataController.select((value) => value.tapPos));
+    final route = ref.watch(dataController.select((value) => value.route));
     final bins = ref.watch(binProivder);
     return WillPopScope(
       onWillPop: () async {
@@ -64,6 +62,9 @@ class _HomePageState extends ConsumerState<HomePage>
                 heroTag: '1',
                 onPressed: () async {
                   showSnackBar(context, 'Fetching Current Location');
+                  ref
+                      .read(dataController.notifier)
+                      .updateTapPos(ref, LatLng(0, 0));
                   await ref.read(userController.notifier).currentLocation();
                   if (context.mounted) {
                     showSnackBar(context, 'Updating Location');
@@ -86,6 +87,7 @@ class _HomePageState extends ConsumerState<HomePage>
               FloatingActionButton(
                 heroTag: '3',
                 onPressed: () async {
+                  print(tapPos);
                   await ref.read(userController.notifier).getRoute(ref);
 
                   //ref.read(dbController.notifier).addBin(Dummy.dummyBin);
@@ -103,9 +105,19 @@ class _HomePageState extends ConsumerState<HomePage>
               FlutterMap(
                 mapController: mapController.mapController,
                 options: MapOptions(
-                  initialCenter: LatLng(12.9716, 77.5946),
-                  initialZoom: 15,
-                ),
+                    initialCenter: LatLng(12.9716, 77.5946),
+                    initialZoom: 15,
+                    onTap: (tapPosition, point) {
+                      ref
+                          .read(dataController.notifier)
+                          .updateTapPos(ref, point);
+                    },
+                    onLongPress: (tapPosition, point) {
+                      ref
+                          .read(dataController.notifier)
+                          .updateTapPos(ref, LatLng(0, 0));
+                      ref.read(dataController.notifier).clearRoutes();
+                    }),
                 children: [
                   TileLayer(
                     urlTemplate:
@@ -151,13 +163,23 @@ class _HomePageState extends ConsumerState<HomePage>
                         ProjectConstants.logger.d('Bins : Loading');
                         return [];
                       }),
+                      Marker(
+                          point: tapPos,
+                          child: Icon(
+                            IconData(
+                              0xe3ab,
+                              fontFamily: 'MaterialIcons',
+                            ),
+                            color: Colors.black,
+                            size: 30,
+                          ))
                     ],
                   ),
                   PolylineLayer(
                     polylines: [
                       Polyline(
                         strokeWidth: 1,
-                        points: routes.map((e) {
+                        points: route.map((e) {
                           return LatLng(e[1], e[0]);
                         }).toList(),
                         color: Colors.greenAccent,
