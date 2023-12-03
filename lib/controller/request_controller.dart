@@ -34,16 +34,16 @@ class RequestProvider extends StateNotifier<bool> {
     }
   }
 
-  Future getLocations(Map<String, String> map) async {
+  Future<Map<String, dynamic>> getLocations(String text) async {
     try {
       final url =
-          '${ProjectConstants.autoEndpoint}?text=${map['text']}&format=${map['format']}&apiKey=${map['apiKey']}';
+          '${ProjectConstants.autoEndpoint}?text=$text&format=json&apiKey=${ProjectConstants.apiKey}';
 
       final response = await dio.get(url);
       return response.data;
     } catch (e) {
       logger.e(e.toString());
-      return null;
+      return {};
     }
   }
 }

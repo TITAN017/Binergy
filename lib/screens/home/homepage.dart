@@ -33,6 +33,9 @@ class _HomePageState extends ConsumerState<HomePage>
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
     );
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      ref.read(mapControllerProvider.notifier).update((state) => mapController);
+    });
     super.initState();
   }
 
@@ -113,6 +116,7 @@ class _HomePageState extends ConsumerState<HomePage>
                           .updateTapPos(ref, point);
                     },
                     onLongPress: (tapPosition, point) {
+                      showSnackBar(context, 'Clearing Locations/Routes');
                       ref
                           .read(dataController.notifier)
                           .updateTapPos(ref, LatLng(0, 0));
@@ -171,7 +175,7 @@ class _HomePageState extends ConsumerState<HomePage>
                               fontFamily: 'MaterialIcons',
                             ),
                             color: Colors.black,
-                            size: 30,
+                            size: 35,
                           ))
                     ],
                   ),

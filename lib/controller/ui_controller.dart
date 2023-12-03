@@ -6,12 +6,20 @@ import 'package:binergy/models/bin_model.dart';
 import 'package:binergy/shared/services.dart';
 import 'package:binergy/shared/snackbar.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_map_animations/flutter_map_animations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:binergy/controller/auth.dart';
 import 'package:binergy/controller/repo.dart';
+import 'package:material_floating_search_bar_2/material_floating_search_bar_2.dart';
+
+final mapControllerProvider =
+    StateProvider<AnimatedMapController?>((ref) => null);
+
+final appBarControllerProvider =
+    StateProvider((ref) => FloatingSearchBarController());
 
 class UserState {
   final String user;
@@ -215,6 +223,7 @@ class UserProvider extends StateNotifier<UserState> {
 
   Future getRoute(WidgetRef ref) async {
     logger.d('DEBUG: getRoute called');
+    showSnackBar(ref.context, 'Fetching Routes');
     state = state.copyWith(loading: true);
     final routeLocs = ref.read(dataController).routeLocs as List;
     if (routeLocs.length < 2) {
@@ -227,6 +236,9 @@ class UserProvider extends StateNotifier<UserState> {
         .getRoute(Services.getRouteMap(routeLocs));
     ref.read(dataController.notifier).addRoutes(data);
     state = state.copyWith(loading: false);
+    if (ref.context.mounted) {
+      showSnackBar(ref.context, 'Displaying Routes');
+    }
   }
 
   void handleBinSelect(
