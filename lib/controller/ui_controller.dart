@@ -3,6 +3,7 @@
 import 'package:binergy/controller/data_controller.dart';
 import 'package:binergy/controller/request_controller.dart';
 import 'package:binergy/models/bin_model.dart';
+import 'package:binergy/screens/auth/utils/text_field.dart';
 import 'package:binergy/shared/services.dart';
 import 'package:binergy/shared/snackbar.dart';
 import 'package:flutter/material.dart';
@@ -13,7 +14,9 @@ import 'package:go_router/go_router.dart';
 
 import 'package:binergy/controller/auth.dart';
 import 'package:binergy/controller/repo.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:material_floating_search_bar_2/material_floating_search_bar_2.dart';
+import 'package:map_launcher/map_launcher.dart';
 
 final mapControllerProvider =
     StateProvider<AnimatedMapController?>((ref) => null);
@@ -25,18 +28,18 @@ class UserState {
   final String user;
   final String name;
   final bool loading;
-  final Position? pos;
+  final LatLng pos;
   final bool dev;
   UserState({
     required this.user,
     required this.name,
     required this.loading,
-    this.pos,
+    required this.pos,
     required this.dev,
   });
 
   UserState copyWith(
-      {String? user, bool? loading, Position? pos, bool? dev, String? name}) {
+      {String? user, bool? loading, LatLng? pos, bool? dev, String? name}) {
     return UserState(
       user: user ?? this.user,
       name: name ?? this.name,
@@ -60,9 +63,7 @@ class UserState {
         name: map['name'] as String,
         user: map['user'] as String,
         loading: map['loading'] as bool,
-        pos: map['pos'] != null
-            ? Position.fromMap(map['pos'] as Map<String, dynamic>)
-            : null,
+        pos: LatLng(map['pos'][0], map['pos'][1]),
         dev: map['dev'] as bool);
   }
 
@@ -77,8 +78,18 @@ final userController =
 
 class UserProvider extends StateNotifier<UserState> {
   UserProvider()
-      : super(
-            UserState(user: 'NULL', loading: false, dev: false, name: 'NULL'));
+      : super(UserState(
+            user: 'NULL',
+            loading: false,
+            dev: false,
+            name: 'NULL',
+            pos: const LatLng(12.9716, 77.5946)));
+
+  void updateUser(Map<String, dynamic> data) {
+    logger.e('Updated from update user data : $data');
+    state = state.copyWith(user: data['id'], name: data['name']);
+    logger.e('Updated from updateUser : $state');
+  }
 
   Future signIn(BuildContext context, WidgetRef ref) async {
     state = state.copyWith(loading: true);
@@ -128,6 +139,7 @@ class UserProvider extends StateNotifier<UserState> {
     state = state.copyWith(loading: true);
     final String res = await ref.read(googleProvider.notifier).logout(ref);
     state = state.copyWith(user: res, loading: false, name: 'NULL');
+    logger.e('Updated from logout : $state');
   }
 
   Future refresh() async {
@@ -166,7 +178,7 @@ class UserProvider extends StateNotifier<UserState> {
     // When we reach here, permissions are granted and we can
     // continue accessing the position of the device.
     final position = await Geolocator.getCurrentPosition();
-    state = state.copyWith(pos: position);
+    state = state.copyWith(pos: LatLng(position.latitude, position.longitude));
     logger.d('lat/lng : ${position.latitude}/${position.longitude}');
   }
 
@@ -223,18 +235,26 @@ class UserProvider extends StateNotifier<UserState> {
 
   Future getRoute(WidgetRef ref) async {
     logger.d('DEBUG: getRoute called');
-    showSnackBar(ref.context, 'Fetching Routes');
+
     state = state.copyWith(loading: true);
     final routeLocs = ref.read(dataController).routeLocs as List;
-    if (routeLocs.length < 2) {
-      logger.e('Select 2 Locations');
+    if (routeLocs.isEmpty) {
       state = state.copyWith(loading: false);
+      showSnackBar(ref.context, 'Select atleast 1 bin!');
       return;
     }
-    final List<Map<String, dynamic>> data = await ref
-        .read(requestController.notifier)
-        .getRoute(Services.getRouteMap(routeLocs));
-    ref.read(dataController.notifier).addRoutes(data);
+    showSnackBar(ref.context, 'Fetching Routes');
+    if (routeLocs.length == 1) {
+      final List<Map<String, dynamic>> curData = await ref
+          .read(requestController.notifier)
+          .getRoute(Services.getRouteMap([state.pos, routeLocs[0]]));
+      ref.read(dataController.notifier).addRoutes(curData);
+    } else {
+      final List<Map<String, dynamic>> data = await ref
+          .read(requestController.notifier)
+          .getRoute(Services.getRouteMap(routeLocs));
+      ref.read(dataController.notifier).addRoutes(data);
+    }
     state = state.copyWith(loading: false);
     if (ref.context.mounted) {
       showSnackBar(ref.context, 'Displaying Routes');
@@ -256,4 +276,96 @@ class UserProvider extends StateNotifier<UserState> {
       showSnackBar(context, 'Selected Bin: ${bin.id}');
     }
   }
+
+  Future launchMaps(WidgetRef ref) async {
+    final routeLocs = ref.read(dataController).routeLocs;
+    LatLng origin, dest;
+    if (routeLocs.length == 1) {
+      origin = state.pos;
+      dest = routeLocs[0];
+    } else {
+      origin = routeLocs[0];
+      dest = routeLocs[1];
+    }
+
+    final map = (await MapLauncher.isMapAvailable(MapType.google));
+    if (map == null ? false : true) {
+      await MapLauncher.showDirections(
+        mapType: MapType.google,
+        origin: Coords(origin.latitude, origin.longitude),
+        destination: Coords(dest.latitude, dest.longitude),
+      );
+    }
+  }
+
+  Future devMode(BuildContext ctx, WidgetRef ref) async {
+    if (state.dev) {
+      state = state.copyWith(dev: false);
+      return;
+    }
+    final controller = TextEditingController();
+    final GlobalKey<FormState> key = GlobalKey<FormState>();
+    state = state.copyWith(loading: true);
+    final bool dev = await showDialog(
+        barrierDismissible: false,
+        context: ctx,
+        builder: (context) {
+          return AlertDialog(
+            backgroundColor: Colors.black,
+            title: const Center(
+              child: Text(
+                'Enter Passcode',
+                style: TextStyle(fontSize: 20, color: Colors.white),
+              ),
+            ),
+            actionsAlignment: MainAxisAlignment.spaceAround,
+            content: Form(
+              key: key,
+              child: CustomField(
+                controller: controller,
+                validate: (text) =>
+                    text == 'Suhail' ? null : "Incorrect Passcode",
+                flag: true,
+                hintText: 'Ex: 0000',
+              ),
+            ),
+            actions: [
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.greenAccent),
+                onPressed: () {
+                  Navigator.pop(context, false);
+                },
+                child: const Text(
+                  'Cancel',
+                  style: TextStyle(fontSize: 15, color: Colors.black),
+                ),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                onPressed: () {
+                  if (key.currentState!.validate()) {
+                    Navigator.pop(context, true);
+                  }
+                },
+                child: const Text(
+                  'Ok',
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: Colors.black,
+                  ),
+                ),
+              ),
+            ],
+          );
+        });
+
+    if (dev) {
+      state = state.copyWith(dev: true, loading: false);
+    } else {
+      state = state.copyWith(loading: false);
+    }
+  }
+
+  void addBin() {}
 }

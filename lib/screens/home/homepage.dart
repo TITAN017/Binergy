@@ -2,6 +2,7 @@
 
 import 'package:binergy/controller/data_controller.dart';
 import 'package:binergy/controller/database_controller.dart';
+import 'package:binergy/controller/streams.dart';
 import 'package:binergy/controller/ui_controller.dart';
 import 'package:binergy/screens/home/drawer.dart';
 import 'package:binergy/screens/home/utils/appbar.dart';
@@ -26,6 +27,7 @@ class HomePage extends ConsumerStatefulWidget {
 class _HomePageState extends ConsumerState<HomePage>
     with TickerProviderStateMixin {
   late AnimatedMapController mapController;
+  final GlobalKey<ScaffoldState> key = GlobalKey<ScaffoldState>();
   @override
   void initState() {
     mapController = AnimatedMapController(
@@ -37,6 +39,10 @@ class _HomePageState extends ConsumerState<HomePage>
       ref.read(mapControllerProvider.notifier).update((state) => mapController);
     });
     super.initState();
+
+    ref.listenManual(userStreamProvider, (previous, next) {
+      ref.read(userController.notifier).updateUser(next.value!);
+    });
   }
 
   @override
@@ -54,8 +60,10 @@ class _HomePageState extends ConsumerState<HomePage>
       },
       child: SafeArea(
         child: Scaffold(
+          key: key,
           backgroundColor: Colors.black,
           drawer: CustomDrawer(
+            skey: key,
             name: ref.watch(userController.select((value) => value.name)),
           ),
           floatingActionButton: Column(
@@ -73,9 +81,7 @@ class _HomePageState extends ConsumerState<HomePage>
                     showSnackBar(context, 'Updating Location');
 
                     mapController.animateTo(
-                        dest: LatLng(ref.read(userController).pos!.latitude,
-                            ref.read(userController).pos!.longitude),
-                        zoom: 15);
+                        dest: ref.read(userController).pos, zoom: 15);
                   }
                 },
                 backgroundColor: Colors.black,
@@ -88,7 +94,7 @@ class _HomePageState extends ConsumerState<HomePage>
                 height: 10,
               ),
               FloatingActionButton(
-                heroTag: '3',
+                heroTag: '2',
                 onPressed: () async {
                   print(tapPos);
                   await ref.read(userController.notifier).getRoute(ref);
@@ -101,6 +107,29 @@ class _HomePageState extends ConsumerState<HomePage>
                   color: Colors.greenAccent,
                 ),
               ),
+              Visibility(
+                  visible: route.isNotEmpty,
+                  child: Column(
+                    children: [
+                      SizedBox(
+                        height: 10,
+                      ),
+                      FloatingActionButton(
+                        heroTag: '3',
+                        onPressed: () async {
+                          print(tapPos);
+                          await ref
+                              .read(userController.notifier)
+                              .launchMaps(ref);
+                        },
+                        backgroundColor: Colors.black,
+                        child: Icon(
+                          IconData(0xe3c8, fontFamily: 'MaterialIcons'),
+                          color: Colors.greenAccent,
+                        ),
+                      ),
+                    ],
+                  ))
             ],
           ),
           body: Stack(

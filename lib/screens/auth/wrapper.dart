@@ -24,7 +24,7 @@ class _WrapperState extends ConsumerState<Wrapper> {
   void toggle() {
     flag = !flag;
     showSnackBar(
-        context, flag ? 'Switched to Log in!' : 'Switched to Sign in!');
+        context, flag ? 'Switched to Log in!' : 'Switched to Sign-Up!');
     setState(() {});
   }
 
@@ -53,7 +53,7 @@ class _WrapperState extends ConsumerState<Wrapper> {
                   ),
                 ],
                 title: Text(
-                  flag ? 'Log in' : 'Sign in',
+                  flag ? 'Log in' : 'Sign-Up',
                   style: TextStyle(
                       color: Colors.white, fontWeight: FontWeight.bold),
                 ),
@@ -87,7 +87,7 @@ class _WrapperState extends ConsumerState<Wrapper> {
                   TextButton(
                     onPressed: toggle,
                     child: Text(
-                      flag ? 'Sign In' : 'Log In',
+                      flag ? 'Sign up' : 'Log In',
                       style: TextStyle(
                         color: Colors.white,
                         decoration: TextDecoration.underline,

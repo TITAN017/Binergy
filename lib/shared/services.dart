@@ -1,4 +1,3 @@
-import 'package:binergy/models/bin_model.dart';
 import 'package:binergy/static/project_constants.dart';
 
 class Services {

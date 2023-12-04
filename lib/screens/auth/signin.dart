@@ -115,7 +115,7 @@ class _SigninState extends ConsumerState<Signin> {
             ),
             SizedBox(height: 25),
             Button(
-              text: 'Sign In',
+              text: 'Sign-Up',
               callback: () {
                 final res = keys[4].currentState!.validate();
                 if (res) {
