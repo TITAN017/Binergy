@@ -108,28 +108,51 @@ class _HomePageState extends ConsumerState<HomePage>
                 ),
               ),
               Visibility(
-                  visible: route.isNotEmpty,
-                  child: Column(
-                    children: [
-                      SizedBox(
-                        height: 10,
+                visible: route.isNotEmpty,
+                child: Column(
+                  children: [
+                    SizedBox(
+                      height: 10,
+                    ),
+                    FloatingActionButton(
+                      heroTag: '3',
+                      onPressed: () async {
+                        print(tapPos);
+                        await ref.read(userController.notifier).launchMaps(ref);
+                      },
+                      backgroundColor: Colors.black,
+                      child: Icon(
+                        IconData(0xe3c8, fontFamily: 'MaterialIcons'),
+                        color: Colors.greenAccent,
                       ),
-                      FloatingActionButton(
-                        heroTag: '3',
-                        onPressed: () async {
-                          print(tapPos);
-                          await ref
-                              .read(userController.notifier)
-                              .launchMaps(ref);
-                        },
-                        backgroundColor: Colors.black,
-                        child: Icon(
-                          IconData(0xe3c8, fontFamily: 'MaterialIcons'),
-                          color: Colors.greenAccent,
-                        ),
+                    ),
+                  ],
+                ),
+              ),
+              Visibility(
+                visible: tapPos != const LatLng(0, 0),
+                child: Column(
+                  children: [
+                    SizedBox(
+                      height: 10,
+                    ),
+                    FloatingActionButton(
+                      heroTag: '4',
+                      onPressed: () async {
+                        print(tapPos);
+                        await ref.read(userController.notifier).addBin(ref);
+                        ScaffoldMessenger.of(context)
+                            .hideCurrentMaterialBanner();
+                      },
+                      backgroundColor: Colors.black,
+                      child: Icon(
+                        Icons.upload,
+                        color: Colors.greenAccent,
                       ),
-                    ],
-                  ))
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
           body: Stack(
@@ -146,6 +169,7 @@ class _HomePageState extends ConsumerState<HomePage>
                     },
                     onLongPress: (tapPosition, point) {
                       showSnackBar(context, 'Clearing Locations/Routes');
+                      ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
                       ref
                           .read(dataController.notifier)
                           .updateTapPos(ref, LatLng(0, 0));

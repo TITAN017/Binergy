@@ -1,9 +1,11 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 
 import 'package:binergy/controller/data_controller.dart';
+import 'package:binergy/controller/database_controller.dart';
 import 'package:binergy/controller/request_controller.dart';
 import 'package:binergy/models/bin_model.dart';
 import 'package:binergy/screens/auth/utils/text_field.dart';
+import 'package:binergy/shared/banner.dart';
 import 'package:binergy/shared/services.dart';
 import 'package:binergy/shared/snackbar.dart';
 import 'package:flutter/material.dart';
@@ -343,7 +345,7 @@ class UserProvider extends StateNotifier<UserState> {
               ),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                onPressed: () {
+                onPressed: () async {
                   if (key.currentState!.validate()) {
                     Navigator.pop(context, true);
                   }
@@ -367,5 +369,22 @@ class UserProvider extends StateNotifier<UserState> {
     }
   }
 
-  void addBin() {}
+  Future addBin(WidgetRef ref) async {
+    showSnackBar(ref.context, 'Adding Bin');
+    final id = ref.read(idController);
+    state = state.copyWith(loading: true);
+    final pos = ref.read(dataController).tapPos;
+    final res = await ref
+        .read(dbController.notifier)
+        .addBin(Services.getBin([id, pos]));
+    if (res) {
+      showSnackBar(ref.context, 'Added Bin');
+    } else {
+      showSnackBar(ref.context, 'Error occured while adding Bin');
+    }
+    ref.read(dataController.notifier).updateTapPos(ref, const LatLng(0, 0));
+    ref.read(idController.notifier).update((state) => null);
+    ScaffoldMessenger.of(ref.context).hideCurrentMaterialBanner();
+    state = state.copyWith(loading: false);
+  }
 }

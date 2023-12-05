@@ -8,4 +8,13 @@ class Services {
       'apiKey': ProjectConstants.apiKey
     };
   }
+
+  static Map<String, dynamic> getBin(List data) {
+    return {
+      'id': data[0],
+      'pos': [data[1].latitude, data[1].longitude],
+      'location': 'Null',
+      'state': 0
+    };
+  }
 }

@@ -16,7 +16,7 @@ void showBanner(GlobalKey<ScaffoldState> key, Widget child, Function callback) {
             ScaffoldMessenger.of(key.currentState!.context)
                 .hideCurrentMaterialBanner();
           },
-          child: const Text('Submit'),
+          child: const Text('Close'),
         ),
       ],
     ),

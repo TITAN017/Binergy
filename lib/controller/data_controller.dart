@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:logger/logger.dart';
 
+final idController = StateProvider<String?>((ref) => null);
+
 class AppData {
   final List allRoutes;
   final List route;

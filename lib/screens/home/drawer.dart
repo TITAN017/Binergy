@@ -1,17 +1,26 @@
 // ignore_for_file: prefer_const_literals_to_create_immutables, prefer_const_constructors
 
+import 'package:binergy/controller/data_controller.dart';
 import 'package:binergy/controller/ui_controller.dart';
 import 'package:binergy/shared/banner.dart';
+import 'package:binergy/shared/snackbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:latlong2/latlong.dart';
 
-class CustomDrawer extends ConsumerWidget {
+class CustomDrawer extends ConsumerStatefulWidget {
   final String name;
   final GlobalKey<ScaffoldState> skey;
   const CustomDrawer({super.key, required this.name, required this.skey});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<CustomDrawer> createState() => _CustomDrawerState();
+}
+
+class _CustomDrawerState extends ConsumerState<CustomDrawer> {
+  @override
+  Widget build(BuildContext context) {
     final bool dev = ref.watch(userController.select((value) => value.dev));
     return Drawer(
       backgroundColor: Colors.black,
@@ -27,7 +36,7 @@ class CustomDrawer extends ConsumerWidget {
               borderRadius: BorderRadius.circular(10),
             ),
             child: Text(
-              'Welcome To Binergy!,\n\n${name == 'NULL' ? 'User' : name}',
+              'Welcome To Binergy!,\n\n${widget.name == 'NULL' ? 'User' : widget.name}',
               style:
                   TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
             ),
@@ -54,15 +63,24 @@ class CustomDrawer extends ConsumerWidget {
           SizedBox(height: 10),
           dev
               ? ListTile(
-                  onTap: () {
+                  onTap: () async {
                     Scaffold.of(context).closeDrawer();
-                    showBanner(
-                        skey,
-                        Text(
-                          'Place The Bin On The Map',
-                          style: TextStyle(color: Colors.greenAccent[100]),
-                        ),
-                        () {});
+                    ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
+                    final String? id = await context.push('/scan') as String?;
+                    if (id == null) {
+                      showSnackBar(
+                          widget.skey.currentContext!, 'Closed Add Bin');
+                      return;
+                    } else {
+                      await Future.delayed(Duration(milliseconds: 100));
+                      showBanner(
+                          widget.skey,
+                          Text(
+                            'Place The Bin On The Map',
+                            style: TextStyle(color: Colors.greenAccent[100]),
+                          ),
+                          () {});
+                    }
                   },
                   tileColor: Colors.grey[850],
                   leading: Icon(
