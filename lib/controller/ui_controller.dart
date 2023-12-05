@@ -5,7 +5,6 @@ import 'package:binergy/controller/database_controller.dart';
 import 'package:binergy/controller/request_controller.dart';
 import 'package:binergy/models/bin_model.dart';
 import 'package:binergy/screens/auth/utils/text_field.dart';
-import 'package:binergy/shared/banner.dart';
 import 'package:binergy/shared/services.dart';
 import 'package:binergy/shared/snackbar.dart';
 import 'package:flutter/material.dart';
@@ -20,6 +19,8 @@ import 'package:latlong2/latlong.dart';
 import 'package:material_floating_search_bar_2/material_floating_search_bar_2.dart';
 import 'package:map_launcher/map_launcher.dart';
 
+final scaffoldCOntroller =
+    StateProvider<GlobalKey<ScaffoldState>?>((ref) => null);
 final mapControllerProvider =
     StateProvider<AnimatedMapController?>((ref) => null);
 
@@ -385,6 +386,18 @@ class UserProvider extends StateNotifier<UserState> {
     ref.read(dataController.notifier).updateTapPos(ref, const LatLng(0, 0));
     ref.read(idController.notifier).update((state) => null);
     ScaffoldMessenger.of(ref.context).hideCurrentMaterialBanner();
+    state = state.copyWith(loading: false);
+  }
+
+  Future deleteBin(WidgetRef ref, Bin bin) async {
+    state = state.copyWith(loading: true);
+    final context = ref.read(scaffoldCOntroller)!.currentContext!;
+    final res = await ref.read(dbController.notifier).deleteBin(bin);
+    if (res) {
+      showSnackBar(context, 'Deleted Bin');
+    } else {
+      showSnackBar(context, 'Error Deleting Bin');
+    }
     state = state.copyWith(loading: false);
   }
 }

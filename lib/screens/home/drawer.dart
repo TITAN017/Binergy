@@ -7,7 +7,6 @@ import 'package:binergy/shared/snackbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:latlong2/latlong.dart';
 
 class CustomDrawer extends ConsumerStatefulWidget {
   final String name;
@@ -66,6 +65,7 @@ class _CustomDrawerState extends ConsumerState<CustomDrawer> {
                   onTap: () async {
                     Scaffold.of(context).closeDrawer();
                     ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
+                    ref.read(idController.notifier).update((state) => null);
                     final String? id = await context.push('/scan') as String?;
                     if (id == null) {
                       showSnackBar(
@@ -74,12 +74,12 @@ class _CustomDrawerState extends ConsumerState<CustomDrawer> {
                     } else {
                       await Future.delayed(Duration(milliseconds: 100));
                       showBanner(
-                          widget.skey,
-                          Text(
-                            'Place The Bin On The Map',
-                            style: TextStyle(color: Colors.greenAccent[100]),
-                          ),
-                          () {});
+                        widget.skey,
+                        Text(
+                          'Place The Bin On The Map',
+                          style: TextStyle(color: Colors.greenAccent[100]),
+                        ),
+                      );
                     }
                   },
                   tileColor: Colors.grey[850],

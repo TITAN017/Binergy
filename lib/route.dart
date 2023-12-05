@@ -1,7 +1,6 @@
 import 'package:binergy/screens/auth/wrapper.dart';
 import 'package:binergy/screens/home/homepage.dart';
 import 'package:binergy/screens/scan/qr_scanner.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
 import 'package:binergy/shared/route_animation.dart';
 

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-void showBanner(GlobalKey<ScaffoldState> key, Widget child, Function callback) {
+void showBanner(GlobalKey<ScaffoldState> key, Widget child) {
   ScaffoldMessenger.of(key.currentState!.context).hideCurrentMaterialBanner();
   ScaffoldMessenger.of(key.currentState!.context).showMaterialBanner(
     MaterialBanner(

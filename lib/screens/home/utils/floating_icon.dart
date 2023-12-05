@@ -24,6 +24,7 @@ class _LocationCardState extends ConsumerState<LocationCard> {
   Widget build(BuildContext context) {
     final bool flag = ref.watch(dataController
         .select((value) => value.routeLocs.contains(widget.bin.pos)));
+    final bool dev = ref.watch(userController.select((value) => value.dev));
     return SizedBox(
       width: 100,
       height: 150,
@@ -82,148 +83,190 @@ class _LocationCardState extends ConsumerState<LocationCard> {
                                   ),
                                 ],
                               )
-                            : Column(
-                                key: ValueKey(1),
-                                children: [
-                                  //? Indicator
-                                  Flexible(
-                                    flex: 5,
-                                    child: Container(
-                                      margin: EdgeInsets.only(bottom: 5),
-                                      decoration: BoxDecoration(
-                                        color: Colors.grey[800],
-                                        border: Border.all(
-                                            color: Colors.black, width: 1),
-                                        borderRadius: BorderRadius.circular(15),
-                                      ),
-                                      child: Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceAround,
-                                        children: [
-                                          Row(
-                                            children: [
-                                              Flexible(
-                                                flex: 3,
-                                                child: Container(
-                                                  margin: EdgeInsets.symmetric(
-                                                      horizontal: 5),
-                                                  alignment: Alignment.center,
-                                                  child: Icon(
-                                                    Icons.delete_rounded,
-                                                    color: pickColor(),
-                                                  ),
-                                                ),
-                                              ),
-                                              Flexible(
-                                                flex: 2,
-                                                child: GestureDetector(
-                                                  behavior: HitTestBehavior
-                                                      .translucent,
-                                                  onTap: () {
-                                                    setState(() {
-                                                      infoTap = !infoTap;
-                                                    });
-                                                    ProjectConstants.logger
-                                                        .d(infoTap);
-                                                  },
+                            : SingleChildScrollView(
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  key: ValueKey(1),
+                                  children: [
+                                    //? Indicator
+                                    Flexible(
+                                      flex: 5,
+                                      child: Container(
+                                        margin: EdgeInsets.only(bottom: 5),
+                                        decoration: BoxDecoration(
+                                          color: Colors.grey[800],
+                                          border: Border.all(
+                                              color: Colors.black, width: 1),
+                                          borderRadius:
+                                              BorderRadius.circular(15),
+                                        ),
+                                        child: Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceAround,
+                                          children: [
+                                            Row(
+                                              children: [
+                                                Flexible(
+                                                  flex: 3,
                                                   child: Container(
                                                     margin:
                                                         EdgeInsets.symmetric(
                                                             horizontal: 5),
                                                     alignment: Alignment.center,
                                                     child: Icon(
-                                                      Icons.info_outline,
-                                                      color: Colors.greenAccent,
+                                                      Icons.delete_rounded,
+                                                      color: pickColor(),
+                                                    ),
+                                                  ),
+                                                ),
+                                                Flexible(
+                                                  flex: 2,
+                                                  child: GestureDetector(
+                                                    behavior: HitTestBehavior
+                                                        .translucent,
+                                                    onTap: () {
+                                                      setState(() {
+                                                        infoTap = !infoTap;
+                                                      });
+                                                      ProjectConstants.logger
+                                                          .d(infoTap);
+                                                    },
+                                                    child: Container(
+                                                      margin:
+                                                          EdgeInsets.symmetric(
+                                                              horizontal: 5),
+                                                      alignment:
+                                                          Alignment.center,
+                                                      child: Icon(
+                                                        Icons.info_outline,
+                                                        color:
+                                                            Colors.greenAccent,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            SizedBox(height: 5),
+                                            Padding(
+                                              padding: const EdgeInsets.only(
+                                                  bottom: 8.0),
+                                              child: CircularPercentIndicator(
+                                                addAutomaticKeepAlive: false,
+                                                radius: 25,
+                                                lineWidth: 4.0,
+                                                percent: widget.bin.state / 100,
+                                                startAngle: 0,
+                                                animateFromLastPercent: true,
+                                                animationDuration: 1500,
+                                                restartAnimation: true,
+                                                center: FittedBox(
+                                                    child: Text(
+                                                  widget.bin.state.toString(),
+                                                  style: TextStyle(
+                                                      color: Colors.white),
+                                                )),
+                                                progressColor: pickColor(),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                    //? Warning sign
+                                    Flexible(
+                                      flex: 1,
+                                      child: Container(
+                                        padding: EdgeInsets.symmetric(
+                                          horizontal: 10,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.grey[800],
+                                          border: Border.all(
+                                              color: Colors.black, width: 1),
+                                          borderRadius:
+                                              BorderRadius.circular(15),
+                                        ),
+                                        child: FittedBox(
+                                          child: Text(
+                                            pickMsg(),
+                                            style: TextStyle(
+                                              color: pickColor(),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    //? Select Button
+                                    Flexible(
+                                      flex: 1,
+                                      child: GestureDetector(
+                                        behavior: HitTestBehavior.translucent,
+                                        onTap: () {
+                                          ref
+                                              .read(userController.notifier)
+                                              .handleBinSelect(context, ref,
+                                                  flag, widget.bin);
+                                        },
+                                        child: Container(
+                                          margin: const EdgeInsets.only(
+                                              right: 10, left: 10, top: 5),
+                                          padding: EdgeInsets.symmetric(
+                                              horizontal: 10),
+                                          decoration: ShapeDecoration(
+                                              shape: StadiumBorder(),
+                                              color: !flag
+                                                  ? Colors.black
+                                                  : Colors.greenAccent),
+                                          child: FittedBox(
+                                            child: Text(
+                                              !flag ? 'SELECT' : 'REMOVE',
+                                              style: TextStyle(
+                                                color: !flag
+                                                    ? Colors.white
+                                                    : Colors.black,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    !dev
+                                        ? SizedBox()
+                                        : Flexible(
+                                            flex: 1,
+                                            child: GestureDetector(
+                                              behavior:
+                                                  HitTestBehavior.translucent,
+                                              onTap: () {
+                                                ref
+                                                    .read(
+                                                        userController.notifier)
+                                                    .deleteBin(ref, widget.bin);
+                                              },
+                                              child: Container(
+                                                margin: const EdgeInsets.only(
+                                                    right: 10,
+                                                    left: 10,
+                                                    top: 5),
+                                                padding: EdgeInsets.symmetric(
+                                                    horizontal: 10),
+                                                decoration: ShapeDecoration(
+                                                    shape: StadiumBorder(),
+                                                    color: Colors.black),
+                                                child: FittedBox(
+                                                  child: Text(
+                                                    'DELETE',
+                                                    style: TextStyle(
+                                                      color: Colors.white,
                                                     ),
                                                   ),
                                                 ),
                                               ),
-                                            ],
-                                          ),
-                                          SizedBox(height: 5),
-                                          Padding(
-                                            padding: const EdgeInsets.only(
-                                                bottom: 8.0),
-                                            child: CircularPercentIndicator(
-                                              addAutomaticKeepAlive: false,
-                                              radius: 25,
-                                              lineWidth: 4.0,
-                                              percent: widget.bin.state / 100,
-                                              startAngle: 0,
-                                              animateFromLastPercent: true,
-                                              animationDuration: 1500,
-                                              restartAnimation: true,
-                                              center: FittedBox(
-                                                  child: Text(
-                                                widget.bin.state.toString(),
-                                                style: TextStyle(
-                                                    color: Colors.white),
-                                              )),
-                                              progressColor: pickColor(),
                                             ),
                                           ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                  //? Warning sign
-                                  Flexible(
-                                    flex: 1,
-                                    child: Container(
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: 10,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: Colors.grey[800],
-                                        border: Border.all(
-                                            color: Colors.black, width: 1),
-                                        borderRadius: BorderRadius.circular(15),
-                                      ),
-                                      child: FittedBox(
-                                        child: Text(
-                                          pickMsg(),
-                                          style: TextStyle(
-                                            color: pickColor(),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  //? Select Button
-                                  Flexible(
-                                    flex: 1,
-                                    child: GestureDetector(
-                                      behavior: HitTestBehavior.translucent,
-                                      onTap: () {
-                                        ref
-                                            .read(userController.notifier)
-                                            .handleBinSelect(
-                                                context, ref, flag, widget.bin);
-                                      },
-                                      child: Container(
-                                        margin: const EdgeInsets.only(
-                                            right: 10, left: 10, top: 5),
-                                        padding: EdgeInsets.symmetric(
-                                            horizontal: 10),
-                                        decoration: ShapeDecoration(
-                                            shape: StadiumBorder(),
-                                            color: !flag
-                                                ? Colors.black
-                                                : Colors.greenAccent),
-                                        child: FittedBox(
-                                          child: Text(
-                                            !flag ? 'SELECT' : 'REMOVE',
-                                            style: TextStyle(
-                                              color: !flag
-                                                  ? Colors.white
-                                                  : Colors.black,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                       ),
                     ),

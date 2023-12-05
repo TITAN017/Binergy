@@ -27,7 +27,7 @@ class HomePage extends ConsumerStatefulWidget {
 class _HomePageState extends ConsumerState<HomePage>
     with TickerProviderStateMixin {
   late AnimatedMapController mapController;
-  final GlobalKey<ScaffoldState> key = GlobalKey<ScaffoldState>();
+  late final GlobalKey<ScaffoldState> key;
   @override
   void initState() {
     mapController = AnimatedMapController(
@@ -42,6 +42,10 @@ class _HomePageState extends ConsumerState<HomePage>
 
     ref.listenManual(userStreamProvider, (previous, next) {
       ref.read(userController.notifier).updateUser(next.value!);
+    });
+    key = GlobalKey<ScaffoldState>();
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      ref.read(scaffoldCOntroller.notifier).update((state) => key);
     });
   }
 
